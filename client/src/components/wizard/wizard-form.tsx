@@ -141,8 +141,8 @@ export default function WizardForm() {
           }
         });
         
-        console.log('AI\'dan gelen veriler:', fields);
-        console.log('Forma aktarılan veriler:', extractedData);
+        console.log('AI\'dan gelen veriler:', JSON.stringify(fields, null, 2));
+        console.log('Forma aktarılan veriler:', JSON.stringify(extractedData, null, 2));
         
         setFormData(extractedData);
       }
