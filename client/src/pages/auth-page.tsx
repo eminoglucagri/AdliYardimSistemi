@@ -190,40 +190,6 @@ export default function AuthPage() {
 
         {/* Right Side - Hero Section */}
         <div className="hidden lg:block">
-          <div className="text-center space-y-6">
-            <div className="w-32 h-32 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-              <FileText className="w-16 h-16 text-primary" />
-            </div>
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-gray-900">
-                Emniyet Bilgi Notlarını
-                <br />
-                Adli Formata Dönüştürün
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                Yapay zeka destekli sistem ile emniyet bilgi notlarınızı
-                hızlı ve doğru şekilde adli formata dönüştürün.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto text-sm">
-              <div className="bg-white/50 rounded-lg p-4">
-                <div className="font-semibold">8 Farklı Format</div>
-                <div className="text-muted-foreground">Şiddet, İstismar, vb.</div>
-              </div>
-              <div className="bg-white/50 rounded-lg p-4">
-                <div className="font-semibold">AI Analizi</div>
-                <div className="text-muted-foreground">Otomatik veri çıkarma</div>
-              </div>
-              <div className="bg-white/50 rounded-lg p-4">
-                <div className="font-semibold">Çoklu Export</div>
-                <div className="text-muted-foreground">Word, PDF, Text</div>
-              </div>
-              <div className="bg-white/50 rounded-lg p-4">
-                <div className="font-semibold">Güvenli Arşiv</div>
-                <div className="text-muted-foreground">Arama ve filtreleme</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
