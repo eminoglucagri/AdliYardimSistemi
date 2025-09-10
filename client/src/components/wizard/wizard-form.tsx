@@ -129,12 +129,36 @@ export default function WizardForm() {
         };
         
         // Ana alanları manuel olarak ayarla
-        extractedData.pressStatus = convertToString(fields.pressStatus || 'dustu');
+        extractedData.pressStatus = convertToString(fields.pressStatus || ''); // Default yok
         extractedData.eventDate = convertToString(fields.eventDate);
         extractedData.eventDateTime = convertToString(fields.eventDateTime);
-        extractedData.victimInfo = convertToString(fields.victimInfo || fields.victim);
+        
+        // Kişi bilgilerini güzel formatla
+        if (fields.victimInfo || fields.victim) {
+          const victim = fields.victimInfo || fields.victim;
+          if (typeof victim === 'object') {
+            const v = victim as any;
+            extractedData.victimInfo = `${v.name || ''} (${v.age || ''} yaş${v.profession ? ', ' + v.profession : ''})`;
+          } else {
+            extractedData.victimInfo = convertToString(victim);
+          }
+        } else {
+          extractedData.victimInfo = '';
+        }
+        
+        if (fields.suspectInfo || fields.suspect) {
+          const suspect = fields.suspectInfo || fields.suspect;
+          if (typeof suspect === 'object') {
+            const s = suspect as any;
+            extractedData.suspectInfo = `${s.name || ''} (${s.age || ''} yaş${s.profession ? ', ' + s.profession : ''})`;
+          } else {
+            extractedData.suspectInfo = convertToString(suspect);
+          }
+        } else {
+          extractedData.suspectInfo = '';
+        }
+        
         extractedData.maritalStatus = convertToString(fields.maritalStatus);
-        extractedData.suspectInfo = convertToString(fields.suspectInfo || fields.suspect);
         extractedData.crimeType = convertToString(fields.crimeType);
         extractedData.eventLocation = convertToString(fields.eventLocation || fields.location);
         extractedData.eventMethod = convertToString(fields.eventMethod || fields.method);
@@ -293,14 +317,14 @@ export default function WizardForm() {
                   {aiAnalysis.suspect && (
                     <li>• Şüpheli: <span className="text-foreground">
                       {typeof aiAnalysis.suspect === 'object' ? 
-                        `${aiAnalysis.suspect.name || 'Bilinmiyor'} (${aiAnalysis.suspect.age || ''} yaş${aiAnalysis.suspect.profession ? ', ' + aiAnalysis.suspect.profession : ''})` 
+                        `${(aiAnalysis.suspect as any).name || 'Bilinmiyor'} (${(aiAnalysis.suspect as any).age || ''} yaş${(aiAnalysis.suspect as any).profession ? ', ' + (aiAnalysis.suspect as any).profession : ''})` 
                         : String(aiAnalysis.suspect)}
                     </span></li>
                   )}
                   {aiAnalysis.victim && (
                     <li>• Mağdur: <span className="text-foreground">
                       {typeof aiAnalysis.victim === 'object' ? 
-                        `${aiAnalysis.victim.name || 'Bilinmiyor'} (${aiAnalysis.victim.age || ''} yaş${aiAnalysis.victim.profession ? ', ' + aiAnalysis.victim.profession : ''})` 
+                        `${(aiAnalysis.victim as any).name || 'Bilinmiyor'} (${(aiAnalysis.victim as any).age || ''} yaş${(aiAnalysis.victim as any).profession ? ', ' + (aiAnalysis.victim as any).profession : ''})` 
                         : String(aiAnalysis.victim)}
                     </span></li>
                   )}
