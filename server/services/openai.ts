@@ -98,10 +98,7 @@ export async function analyzePoliceReport(text: string): Promise<AIAnalysisResul
       extractedFields.subject = formatNames[result.suggestedFormat];
     }
     
-    // Basın durumu default
-    if (!extractedFields.pressStatus) {
-      extractedFields.pressStatus = 'dustu';
-    }
+    // Basın durumu varsayılan değer yok - kullanıcı seçmeli
     
     return {
       eventDate: result.eventDate,
@@ -120,9 +117,30 @@ export async function analyzePoliceReport(text: string): Promise<AIAnalysisResul
 }
 
 function replacePlaceholder(template: string, key: string, value: any): string {
+  // Değeri formatla
+  const formatValue = (val: any): string => {
+    if (val === null || val === undefined) return '';
+    
+    // Eğer object ise ve kişi bilgisi gibi görünüyorsa formatla
+    if (typeof val === 'object' && val !== null) {
+      // Kişi bilgisi formatı için kontrol et
+      if (val.name || val.age || val.profession) {
+        const parts = [];
+        if (val.name) parts.push(val.name);
+        if (val.age) parts.push(`${val.age} yaş`);
+        if (val.profession) parts.push(val.profession);
+        return parts.join(', ');
+      }
+      // Diğer object'ler için JSON string
+      return JSON.stringify(val);
+    }
+    
+    return String(val);
+  };
+  
   // Basit placeholder değişimi
   const simpleRegex = new RegExp('{{' + key + '}}', 'g');
-  template = template.replace(simpleRegex, String(value || ''));
+  template = template.replace(simpleRegex, formatValue(value));
   
   // Koşullu bölümler için
   if (value !== null && value !== undefined && value !== '') {
