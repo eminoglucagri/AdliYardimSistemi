@@ -1,120 +1,65 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 
 export async function generateWordDocument(content: string, title: string): Promise<Buffer> {
-  // İçeriği parse et
+  // İçeriği parse et ve düzenle
   const lines = content.split('\n').filter(line => line.trim());
   
-  // İçerik bölümlerini organize et
   let konu = "";
   let basinDurumu = "";
-  const sections: { title: string, content: string }[] = [];
-  let currentSection = "";
-  let currentContent = "";
   
+  // Konu ve basın durumunu bul
   lines.forEach(line => {
     if (line.startsWith("KONU:")) {
       konu = line.replace("KONU:", "").trim();
     } else if (line.includes("BASINA DÜŞME DURUMU:")) {
       basinDurumu = line.replace("BASINA DÜŞME DURUMU:", "").trim();
-    } else if (line.includes("MAĞDUR BİLGİLERİ:") || 
-               line.includes("ŞÜPHELİ BİLGİLERİ:") ||
-               line.includes("SUÇ BİLGİLERİ:") ||
-               line.includes("TEDBİRLER:") ||
-               line.includes("OLAYIN ÖZETİ:")) {
-      
-      if (currentSection && currentContent) {
-        sections.push({ title: currentSection, content: currentContent.trim() });
-      }
-      
-      currentSection = line.replace(":", "").trim();
-      currentContent = "";
-    } else if (currentSection && line.trim() && 
-               !line.startsWith("T.C.") &&
-               !line.startsWith("ANKARA") &&
-               !line.startsWith("BİLGİ NOTU")) {
-      currentContent += line + "\n";
     }
   });
-  
-  if (currentSection && currentContent) {
-    sections.push({ title: currentSection, content: currentContent.trim() });
-  }
+
+  // Düzenli içerik oluştur
+  const formattedContent = [
+    `KONU: ${konu}`,
+    `BASIN DESTEK DURUMU: ${basinDurumu}`,
+    "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "                              BİLGİ NOTU",
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "",
+    ...lines.filter(line => 
+      !line.startsWith("T.C.") && 
+      !line.startsWith("ANKARA") && 
+      !line.startsWith("BİLGİ NOTU") &&
+      !line.startsWith("KONU:") &&
+      !line.includes("BASINA DÜŞME DURUMU:")
+    )
+  ];
 
   const doc = new Document({
     sections: [
       {
         properties: {},
         children: [
-          // Başlık bölümü
           new Paragraph({
             text: "HİZMETE ÖZEL",
             heading: HeadingLevel.TITLE,
-            alignment: AlignmentType.CENTER,
+            alignment: "center",
           }),
           new Paragraph({
             text: new Date().toLocaleDateString("tr-TR"),
-            alignment: AlignmentType.CENTER,
+            alignment: "center",
           }),
           new Paragraph({
-            text: "BAŞSAVCILIĞI",
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
+            text: "ANKARA CUMHURİYET BAŞSAVCILIĞI",
+            alignment: "center",
           }),
-          
-          // Konu ve Basın Durumu tablosu
-          new Table({
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({
-                    children: [new Paragraph({ 
-                      children: [new TextRun({ text: "KONU:", bold: true })]
-                    })],
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ 
-                      children: [new TextRun({ text: "BASIN DESTEK DURUMU", bold: true })]
-                    })],
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: konu })],
-                  }),
-                  new TableCell({
-                    children: [new Paragraph({ text: basinDurumu })],
-                  }),
-                ],
-              }),
-            ],
-          }),
-          
           new Paragraph({ text: "" }), // Boşluk
           
-          // BİLGİ NOTU başlığı
-          new Paragraph({
-            children: [new TextRun({ text: "BİLGİ NOTU", bold: true })],
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 200, after: 200 },
-          }),
-          
-          // İçerik tablosu
-          new Table({
-            rows: sections.map(section => 
-              new TableRow({
-                children: [
-                  new TableCell({
-                    children: [new Paragraph({ 
-                      children: [new TextRun({ text: section.title, bold: true })]
-                    })],
-                  }),
-                  new TableCell({
-                    children: section.content.split('\n').filter(line => line.trim()).map(line => 
-                      new Paragraph({ text: line.trim() })
-                    ),
-                  }),
-                ],
-              })
-            ),
-          }),
+          ...formattedContent.map(line => 
+            new Paragraph({
+              text: line,
+              children: line.includes("BİLGİ NOTU") ? [new TextRun({ text: line, bold: true })] : undefined,
+            })
+          ),
         ],
       },
     ],
