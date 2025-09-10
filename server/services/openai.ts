@@ -35,8 +35,23 @@ export async function analyzePoliceReport(text: string): Promise<AIAnalysisResul
           - public-order: Kamu Düzeni
           - accidents: Kaza/Patlama
           
+          Aşağıdaki alanları çıkar (varsa):
+          - eventDate: Olay tarihi (DD.MM.YYYY formatında)
+          - eventDateTime: Olay tarih ve saati 
+          - suspect: Şüpheli bilgisi (ad, yaş, meslek vb.)
+          - victim: Mağdur bilgisi (ad, yaş, meslek vb.)
+          - crimeType: Suç türü
+          - location: Olay yeri
+          - summary: Olay özeti
+          - method: Eylem şekli
+          - maritalStatus: Medeni durum
+          - injuryType: Yaralanma türü
+          - measures: Alınan tedbirler
+          - pressStatus: Basına yansıma durumu (dustu/dusmedi)
+          - suggestedFormat: Önerilen format (yukarıdakilerden biri)
+          
           Sadece metinde açıkça belirtilen bilgileri çıkar.
-          JSON formatında kısa ve öz yanıt ver.`
+          JSON formatında yanıt ver.`
         },
         {
           role: "user",

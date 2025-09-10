@@ -109,75 +109,36 @@ export default function WizardForm() {
       
       // AI analizinden gelen verileri forma aktar
       if (aiAnalysis?.extractedFields) {
-        const extractedData: Record<string, any> = {};
         const fields = aiAnalysis.extractedFields;
         
-        // Konu başlığı
+        // Format adını konu başlığı olarak ayarla
         const format = formatOptions.find(f => f.id === formatId);
-        extractedData.subject = format?.name || '';
         
-        // Basın durumu - her zaman seç
-        extractedData.pressStatus = 'dustu'; // Default olarak düştü
-        
-        // Tarih alanları
-        if (fields.olay?.olayTarihi || fields.eventDate) {
-          extractedData.eventDate = fields.olay?.olayTarihi || fields.eventDate || '';
-        }
-        if (fields.olay?.olaySaati || fields.eventTime) {
-          const date = fields.olay?.olayTarihi || fields.eventDate || '';
-          const time = fields.olay?.olaySaati || fields.eventTime || '';
-          extractedData.eventDateTime = `${date}T${time}`;
-        }
-        
-        // Mağdur bilgileri
-        if (fields.maktul || fields.magdur || fields.victim) {
-          const victim = fields.maktul || fields.magdur || fields.victim;
-          let victimText = '';
-          if (victim.adSoyad || victim.name) victimText += victim.adSoyad || victim.name;
-          if (victim.dogumTarihi || victim.birthDate) victimText += ` (${victim.dogumTarihi || victim.birthDate})`;
-          if (victim.meslek || victim.job) victimText += ` - ${victim.meslek || victim.job}`;
-          extractedData.victimInfo = victimText || 'Bilgi yok';
-          extractedData.maritalStatus = victim.medeniDurum || '';
-        }
-        
-        // Şüpheli bilgileri
-        if (fields.supheli || fields.suspect) {
-          const suspect = fields.supheli || fields.suspect;
-          let suspectText = '';
-          if (suspect.adSoyad || suspect.name) suspectText += suspect.adSoyad || suspect.name;
-          if (suspect.dogumTarihi || suspect.birthDate) suspectText += ` (${suspect.dogumTarihi || suspect.birthDate})`;
-          if (suspect.meslek || suspect.job) suspectText += ` - ${suspect.meslek || suspect.job}`;
-          if (suspect.maktulleIliski || suspect.relationship) {
-            suspectText += ` - Mağdur ile ilişkisi: ${suspect.maktulleIliski || suspect.relationship}`;
-          }
-          extractedData.suspectInfo = suspectText || 'Bilgi yok';
-        }
-        
-        // Olay bilgileri
-        if (fields.olay || fields.event) {
-          const event = fields.olay || fields.event;
-          extractedData.crimeType = event.olayTuru || event.type || fields.hukukiSurec?.muhtemelSucNiteligi || fields.crimeType || '';
-          extractedData.eventLocation = event.yer?.acikAdres || event.location || fields.location || '';
-          extractedData.eventMethod = event.eylemSekli || event.method || '';
-          extractedData.eventSummary = event.olayOzeti || event.summary || fields.summary || '';
-          extractedData.injuryType = fields.maktul?.yaralanmaDurumu || '';
-          extractedData.autopsyFindings = fields.maktul?.olum?.tespit || '';
-        }
-        
-        // Tedbir bilgileri
-        if (fields.hukukiSurec || fields.legal) {
-          const legal = fields.hukukiSurec || fields.legal;
-          extractedData.suspectMeasures = legal.koruyucuTedbir || legal.measures || '';
-          extractedData.protectiveMeasures = legal.koruyucuTedbir || legal.measures || '';
-        }
-        
-        // Önce AI verilerini, sonra extractedFields'i birleştir
-        const allExtractedData = {
-          ...extractedData,
-          ...fields, // Tüm extractedFields'i ekle
+        // Tüm AI verilerini direkt olarak forma aktar
+        const extractedData: Record<string, any> = {
+          subject: format?.name || fields.subject || '',
+          pressStatus: fields.pressStatus || 'dustu',
+          eventDate: fields.eventDate || '',
+          eventDateTime: fields.eventDateTime || '',
+          victimInfo: fields.victimInfo || '',
+          maritalStatus: fields.maritalStatus || '',
+          suspectInfo: fields.suspectInfo || '',
+          crimeType: fields.crimeType || '',
+          eventLocation: fields.eventLocation || '',
+          eventMethod: fields.eventMethod || '',
+          eventSummary: fields.eventSummary || '',
+          injuryType: fields.injuryType || '',
+          autopsyFindings: fields.autopsyFindings || '',
+          suspectMeasures: fields.suspectMeasures || '',
+          protectiveMeasures: fields.protectiveMeasures || '',
+          // Diğer tüm alanları da ekle
+          ...fields
         };
         
-        setFormData(allExtractedData);
+        console.log('AI\'dan gelen veriler:', fields);
+        console.log('Forma aktarılan veriler:', extractedData);
+        
+        setFormData(extractedData);
       }
     }
   };
