@@ -138,7 +138,12 @@ export default function WizardForm() {
           const victim = fields.victimInfo || fields.victim;
           if (typeof victim === 'object') {
             const v = victim as any;
-            extractedData.victimInfo = `${v.name || ''} (${v.age || ''} yaş${v.profession ? ', ' + v.profession : ''})`;
+            let result = v.name || '';
+            const details = [];
+            if (v.age) details.push(`${v.age} yaşında`);
+            if (v.profession) details.push(v.profession);
+            if (details.length > 0) result += ` (${details.join(', ')})`;
+            extractedData.victimInfo = result;
           } else {
             extractedData.victimInfo = convertToString(victim);
           }
@@ -150,7 +155,12 @@ export default function WizardForm() {
           const suspect = fields.suspectInfo || fields.suspect;
           if (typeof suspect === 'object') {
             const s = suspect as any;
-            extractedData.suspectInfo = `${s.name || ''} (${s.age || ''} yaş${s.profession ? ', ' + s.profession : ''})`;
+            let result = s.name || '';
+            const details = [];
+            if (s.age) details.push(`${s.age} yaşında`);
+            if (s.profession) details.push(s.profession);
+            if (details.length > 0) result += ` (${details.join(', ')})`;
+            extractedData.suspectInfo = result;
           } else {
             extractedData.suspectInfo = convertToString(suspect);
           }
@@ -317,14 +327,30 @@ export default function WizardForm() {
                   {aiAnalysis.suspect && (
                     <li>• Şüpheli: <span className="text-foreground">
                       {typeof aiAnalysis.suspect === 'object' ? 
-                        `${(aiAnalysis.suspect as any).name || 'Bilinmiyor'} (${(aiAnalysis.suspect as any).age || ''} yaş${(aiAnalysis.suspect as any).profession ? ', ' + (aiAnalysis.suspect as any).profession : ''})` 
+                        (() => {
+                          const s = aiAnalysis.suspect as any;
+                          let result = s.name || 'Bilinmiyor';
+                          const details = [];
+                          if (s.age) details.push(`${s.age} yaşında`);
+                          if (s.profession) details.push(s.profession);
+                          if (details.length > 0) result += ` (${details.join(', ')})`;
+                          return result;
+                        })()
                         : String(aiAnalysis.suspect)}
                     </span></li>
                   )}
                   {aiAnalysis.victim && (
                     <li>• Mağdur: <span className="text-foreground">
                       {typeof aiAnalysis.victim === 'object' ? 
-                        `${(aiAnalysis.victim as any).name || 'Bilinmiyor'} (${(aiAnalysis.victim as any).age || ''} yaş${(aiAnalysis.victim as any).profession ? ', ' + (aiAnalysis.victim as any).profession : ''})` 
+                        (() => {
+                          const v = aiAnalysis.victim as any;
+                          let result = v.name || 'Bilinmiyor';
+                          const details = [];
+                          if (v.age) details.push(`${v.age} yaşında`);
+                          if (v.profession) details.push(v.profession);
+                          if (details.length > 0) result += ` (${details.join(', ')})`;
+                          return result;
+                        })()
                         : String(aiAnalysis.victim)}
                     </span></li>
                   )}

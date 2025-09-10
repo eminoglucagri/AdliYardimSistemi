@@ -38,8 +38,8 @@ export async function analyzePoliceReport(text: string): Promise<AIAnalysisResul
           Aşağıdaki alanları çıkar (varsa):
           - eventDate: Olay tarihi (DD.MM.YYYY formatında)
           - eventDateTime: Olay tarih ve saati 
-          - suspect: Şüpheli bilgisi (ad, yaş, meslek vb.)
-          - victim: Mağdur bilgisi (ad, yaş, meslek vb.)
+          - suspect: Şüpheli bilgisi obje formatında: {name: "Ad Soyad", age: "yaş", profession: "meslek"}
+          - victim: Mağdur bilgisi obje formatında: {name: "Ad Soyad", age: "yaş", profession: "meslek"}
           - crimeType: Suç türü
           - location: Olay yeri
           - summary: Olay özeti
@@ -125,11 +125,18 @@ function replacePlaceholder(template: string, key: string, value: any): string {
     if (typeof val === 'object' && val !== null) {
       // Kişi bilgisi formatı için kontrol et
       if (val.name || val.age || val.profession) {
-        const parts = [];
-        if (val.name) parts.push(val.name);
-        if (val.age) parts.push(`${val.age} yaş`);
-        if (val.profession) parts.push(val.profession);
-        return parts.join(', ');
+        let result = '';
+        if (val.name) result += val.name;
+        
+        const details = [];
+        if (val.age) details.push(`${val.age} yaşında`);
+        if (val.profession) details.push(val.profession);
+        
+        if (details.length > 0) {
+          result += ` (${details.join(', ')})`;
+        }
+        
+        return result;
       }
       // Diğer object'ler için JSON string
       return JSON.stringify(val);
