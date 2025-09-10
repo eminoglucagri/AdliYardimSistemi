@@ -1,0 +1,24 @@
+Oluşturulacak yazılımın amacı:
+Ankara Cumhuriyet Başsavcılığının soruşturma yürüttüğü önemli olaylarda üst adli makamlara bilgi notu hazırlanarak gönderilmektedir. Ancak hazırlanan bilgi notu emniyet güçlerine ait bilgi notu olması nedeniyle adli teşkilata uygun olmuyor. bu nedenle geliştireceğimiz yazılım, kullanıcının emniyetten gelen bilgi notunu text box a yapıştırıp, ai aracılığı ile bilgi notu içeriğini analiz ederek adli formata uygun şekilde yeniden düzenleyerek kullanıcıya sunmasını sağlamalıdır. Kesinlikle yapay zeka yorum, yanlış bilgi vb vermemeli sadece kullanıcıdan alınan bilgi notunu analiz ederek ekte sana gönderdiğim bilgi notu formatlarına uygun şekilde formun otomatik olarak doldurulmasını sağlayacak ve kullanıcıya pdf, word ya da doğrudan kopyalanabilir şekilde sunacak. 
+İş Akışı:
+1-Kullanıcı landing page de sicil numarası ile giriş yapacak
+2-Kullanıcıyı wizard formu karşılayacak. ilk aşamada Kullanıcı kendisine emniyetten gönderilen bilgi notunu text box a yapıştıracak. ai bilgi notunu analiz edecek ve yazılımın ortaya çıkaracağı bilgi notu şablonuna uygun verileri kullanıcıya gösterecek. 
+3-Sonraki aşamada kullanıcıdan hangi bilgi notu formatına uygun içerik hazırlamak istediği sorulacak, bu format başlıkları şu şekilde; 
+Kadına ve Çocuğa Şiddet
+Cinsel Saldırı / İstismar
+Mağdurun Vasıf Sebebiyle Önem Arz Eden Olaylar
+Şüphelinin Vasıf Sebebiyle Önem Arz Eden Olaylar
+Hâkim - Savcı - Avukat Olayları
+Organize Suç Örgütü – Toplumun Geneline Yayılan Ekonomi Alanında İşlenen Suçlar
+Patlama, Doğal Olay, Kazalar
+KAMU DÜZENİNE KARŞI İŞLENEN SUÇLAR
+4- Kullanıcı seçimini tamamladıktan sonra diğer aşamada ilgili formatta istenen bilgilerden kullanıcı tarafından ilk sunulan bilgi notunda olmayan bilgilerin işaretlenmesi ya da metin olarak doldurulması istenir. 
+5- Kullanıcının Verdiği bilgilere göre ve istenen bilgi notu formatına göre uygun şekilde bilgi notu düzenlenerek kullanıcıya word veya pdf ya da doğrudan kopyalanabilir şekilde sunulur.
+
+Yönetim Paneli:
+Yönetim paneli detaylı olmak zorunda değil çünkü kapalı devre kullanılacak bir sistem olacak. Yönetim panelinde;
+ kullanıcı yönetimi: kullanıcıların sisteme girebilmesi için sicil numaraları ile giriş yapmaları gerekeceinden kullanıcılar yönetim panelinden sicil numarası listesinin topluca yüklenmesi suretiyle oluşturulacak. yönetim panelinden hangi kullanıcıların yönetici admin yetkisinin olacağı belirlenebilecek. Sisteme kullanıcı listesi yüklenirken Sicil no, Ad Soyad, Ünvan formatında sisteme kayıt olunacak ve sistemde kullanıcının bilgileri bu şekilde saklanacak. 
+Bilgi Notu Şablonları: wizardda bulunan bilgi notlarının daha sonrasında değiştirilebilme ihtimali bulunduğundan sisteme pdf veya doc olarak eklenebilecek yeni şablonların sisteme otomatik entegre edilmesi sağlacanacak. 
+Arşiv: geçmiş bilgi notlarının arşivi tutulacak. burada sicil numarası ya da ismiyle, ya da bilgi notunda yazan metinler içinde arama yapmak suretiyle filtrelenebilir olmalı. 
+
+Ekte mevcut şablonları yüklüyorum.
