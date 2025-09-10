@@ -114,26 +114,32 @@ export default function WizardForm() {
         // Format adını konu başlığı olarak ayarla
         const format = formatOptions.find(f => f.id === formatId);
         
-        // Tüm AI verilerini direkt olarak forma aktar
+        // AI verilerini string formatında forma aktar
         const extractedData: Record<string, any> = {
-          subject: format?.name || fields.subject || '',
-          pressStatus: fields.pressStatus || 'dustu',
-          eventDate: fields.eventDate || '',
-          eventDateTime: fields.eventDateTime || '',
-          victimInfo: fields.victimInfo || '',
-          maritalStatus: fields.maritalStatus || '',
-          suspectInfo: fields.suspectInfo || '',
-          crimeType: fields.crimeType || '',
-          eventLocation: fields.eventLocation || '',
-          eventMethod: fields.eventMethod || '',
-          eventSummary: fields.eventSummary || '',
-          injuryType: fields.injuryType || '',
-          autopsyFindings: fields.autopsyFindings || '',
-          suspectMeasures: fields.suspectMeasures || '',
-          protectiveMeasures: fields.protectiveMeasures || '',
-          // Diğer tüm alanları da ekle
-          ...fields
+          subject: format?.name || String(fields.subject || ''),
+          pressStatus: String(fields.pressStatus || 'dustu'),
+          eventDate: String(fields.eventDate || ''),
+          eventDateTime: String(fields.eventDateTime || ''),
+          victimInfo: typeof fields.victimInfo === 'object' ? JSON.stringify(fields.victimInfo) : String(fields.victimInfo || ''),
+          maritalStatus: String(fields.maritalStatus || ''),
+          suspectInfo: typeof fields.suspectInfo === 'object' ? JSON.stringify(fields.suspectInfo) : String(fields.suspectInfo || ''),
+          crimeType: String(fields.crimeType || ''),
+          eventLocation: typeof fields.location === 'object' ? JSON.stringify(fields.location) : String(fields.location || fields.eventLocation || ''),
+          eventMethod: String(fields.eventMethod || fields.method || ''),
+          eventSummary: String(fields.eventSummary || fields.summary || ''),
+          injuryType: String(fields.injuryType || ''),
+          autopsyFindings: String(fields.autopsyFindings || ''),
+          suspectMeasures: String(fields.suspectMeasures || fields.measures || ''),
+          protectiveMeasures: String(fields.protectiveMeasures || fields.measures || ''),
         };
+        
+        // Diğer alanları da string olarak ekle
+        Object.keys(fields).forEach(key => {
+          if (!extractedData[key]) {
+            const value = fields[key];
+            extractedData[key] = typeof value === 'object' ? JSON.stringify(value) : String(value || '');
+          }
+        });
         
         console.log('AI\'dan gelen veriler:', fields);
         console.log('Forma aktarılan veriler:', extractedData);
