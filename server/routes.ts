@@ -1,6 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 import { storage } from "./storage";
 import { analyzePoliceReport, generateJudicialDocument } from "./services/openai";
 import { generateWordDocument, generatePDFFromHTML } from "./services/document-generator";
@@ -181,6 +191,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/users", requireAdmin, async (req, res, next) => {
+    try {
+      const { registryNumber, name, title, password, isAdmin } = req.body;
+      const user = await storage.createUser({
+        registryNumber,
+        name,
+        title,
+        password: await hashPassword(password),
+        isAdmin: isAdmin || false
+      });
+      res.status(201).json(user);
     } catch (error) {
       next(error);
     }
