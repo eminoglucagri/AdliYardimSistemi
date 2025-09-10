@@ -189,7 +189,7 @@ export default function AdminPanel() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users?.map((user: any) => (
+                  {(users as any[])?.map((user: any) => (
                     <TableRow key={user.id} data-testid={`row-user-${user.id}`}>
                       <TableCell>{user.registryNumber}</TableCell>
                       <TableCell>{user.name}</TableCell>
@@ -294,7 +294,7 @@ export default function AdminPanel() {
               <div>
                 <h3 className="font-medium text-foreground mb-4">Mevcut Şablonlar</h3>
                 <div className="space-y-2">
-                  {templates?.map((template: any) => (
+                  {(templates as any[])?.map((template: any) => (
                     <div
                       key={template.id}
                       className="flex justify-between items-center p-3 border border-border rounded-md"
@@ -333,7 +333,7 @@ export default function AdminPanel() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Toplam Kullanıcı</p>
-                <p className="text-lg font-semibold text-foreground">{users?.length || 0}</p>
+                <p className="text-lg font-semibold text-foreground">{(users as any[])?.length || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -375,7 +375,7 @@ export default function AdminPanel() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Aktif Şablon</p>
-                <p className="text-lg font-semibold text-foreground">{templates?.length || 0}</p>
+                <p className="text-lg font-semibold text-foreground">{(templates as any[])?.length || 0}</p>
               </div>
             </div>
           </CardContent>

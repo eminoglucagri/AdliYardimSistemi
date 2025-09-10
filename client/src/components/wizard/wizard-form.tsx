@@ -114,7 +114,7 @@ export default function WizardForm() {
       return;
     }
 
-    const selectedTemplate = templates?.find((t: any) => t.type === selectedFormat);
+    const selectedTemplate = (templates as any[])?.find((t: any) => t.type === selectedFormat);
     if (!selectedTemplate) {
       toast({
         title: "Hata",
