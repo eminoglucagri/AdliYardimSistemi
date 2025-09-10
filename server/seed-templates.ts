@@ -4,6 +4,33 @@ const defaultTemplates = [
   {
     name: "Kadına ve Çocuğa Şiddet",
     type: "violence",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH: {{eventDate}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+MAĞDUR BİLGİLERİ:
+{{victimInfo}}
+Medeni Durumu: {{maritalStatus}}
+
+ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}
+
+SUÇ BİLGİLERİ:
+Suç Adı/Sevk: {{crimeType}}
+Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
+{{#if injuryType}}Yaralanmanın Niteliği: {{injuryType}}{{/if}}
+{{#if autopsyFindings}}Ölü Muayene/Otopsi Bulguları: {{autopsyFindings}}{{/if}}
+
+TEDBİRLER:
+{{#if protectiveMeasures}}Mağdur Hakkında Koruyucu Tedbir: {{protectiveMeasures}}{{/if}}
+{{#if suspectMeasures}}Şüpheli Hakkındaki Tedbir: {{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -23,6 +50,36 @@ const defaultTemplates = [
   {
     name: "Cinsel Saldırı / İstismar",
     type: "sexual",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH: {{eventDate}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+MAĞDUR BİLGİLERİ:
+{{victimInfo}}
+{{#if maritalStatus}}Medeni Durumu: {{maritalStatus}}{{/if}}
+
+ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}
+{{#if relationship}}Şüpheli ve Mağdur Arasındaki İlişki: {{relationship}}{{/if}}
+
+SUÇ BİLGİLERİ:
+Suç Adı/Sevk: {{crimeType}}
+Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
+{{#if eventRepetition}}Eylemin Tekrarlanma Durumu: {{eventRepetition}}{{/if}}
+
+{{#if medicalReport}}DOKTOR RAPORU:
+{{medicalReport}}{{/if}}
+
+TEDBİRLER:
+{{#if protectiveMeasures}}Mağdur Hakkında Koruyucu Tedbir: {{protectiveMeasures}}{{/if}}
+{{#if suspectMeasures}}Şüpheli Hakkındaki Tedbir: {{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -43,6 +100,29 @@ const defaultTemplates = [
   {
     name: "Mağdurun Vasıf Sebebiyle Önem Arz Eden Olaylar",
     type: "victim-status",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH: {{eventDate}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+MAĞDUR BİLGİLERİ:
+{{victimInfo}}
+
+ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}
+
+SUÇ BİLGİLERİ:
+Suç Adı/Sevk: {{crimeType}}
+Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
+
+{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
+{{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -58,6 +138,29 @@ const defaultTemplates = [
   {
     name: "Şüphelinin Vasıf Sebebiyle Önem Arz Eden Olaylar",
     type: "suspect-status",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH: {{eventDate}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}
+
+{{#if victimInfo}}MAĞDUR BİLGİLERİ:
+{{victimInfo}}{{/if}}
+
+SUÇ BİLGİLERİ:
+Suç Adı/Sevk: {{crimeType}}
+Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
+
+{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
+{{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -73,6 +176,30 @@ const defaultTemplates = [
   {
     name: "Hâkim - Savcı - Avukat Olayları",
     type: "legal-personnel",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH: {{eventDate}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}
+
+MAĞDUR BİLGİLERİ:
+{{victimInfo}}
+
+SUÇ BİLGİLERİ:
+Suç Adı/Sevk: {{crimeType}}
+Eylemin Gerçekleşme Şekli: {{eventMethod}}
+Eylemin Yeri: {{eventLocation}}
+
+{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
+{{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -89,6 +216,31 @@ const defaultTemplates = [
   {
     name: "Organize Suç Örgütü - Toplumun Geneline Yayılan Ekonomi Alanında İşlenen Suçlar",
     type: "organized-crime",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH: {{eventDate}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+ÖRGÜT BİLGİLERİ:
+Örgütün Kuruluş Amacı: {{organizationPurpose}}
+
+ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}
+{{#if suspectJob}}Şüphelinin Mesleği/Görevi: {{suspectJob}}{{/if}}
+
+SUÇ BİLGİLERİ:
+Organize Şekilde İşlenen Suç Adı/Sevk: {{organizedCrime}}
+Mağdur ve Şüpheli Sayısı: {{victimSuspectCount}}
+{{#if damageAmount}}Zarar Miktarı: {{damageAmount}}{{/if}}
+
+{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
+{{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -106,6 +258,29 @@ const defaultTemplates = [
   {
     name: "Kamu Düzenine Karşı İşlenen Suçlar",
     type: "public-order",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH: {{eventDate}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}
+{{#if mentalDisability}}Zihinsel Engellilik Durumu: {{mentalDisability}}{{/if}}
+
+SUÇ BİLGİLERİ:
+Suç Adı/Sevk: {{crimeType}}
+{{#if targetGroup}}Eylemin Yöneldiği Kesim: {{targetGroup}}{{/if}}
+Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
+{{#if speechContent}}Söz ve Eylemlerin İçeriği: {{speechContent}}{{/if}}
+
+{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
+{{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -123,6 +298,32 @@ const defaultTemplates = [
   {
     name: "Patlama, Doğal Olay, Kazalar",
     type: "accidents",
+    templateContent: `T.C.
+ANKARA CUMHURİYET BAŞSAVCILIĞI
+BİLGİ NOTU
+
+KONU: {{subject}}
+TARİH VE SAAT: {{eventDateTime}}
+BASINA DÜŞME DURUMU: {{pressStatus}}
+
+{{#if victimInfo}}ÖLEN/MAĞDUR BİLGİLERİ:
+{{victimInfo}}{{/if}}
+
+{{#if suspectInfo}}ŞÜPHELİ BİLGİLERİ:
+{{suspectInfo}}{{/if}}
+
+OLAY BİLGİLERİ:
+Suç Adı/Sevk: {{crimeType}}
+Olayın Gerçekleşme Şekli: {{eventMethod}}
+{{#if healthStatus}}Yaralıların Sağlık Durumları: {{healthStatus}}{{/if}}
+{{#if faultSituations}}Kusur Durumları: {{faultSituations}}{{/if}}
+{{#if trafficViolations}}Trafik İhlalleri: {{trafficViolations}}{{/if}}
+
+{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
+{{suspectMeasures}}{{/if}}
+
+OLAYIN ÖZETİ:
+{{eventSummary}}`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },

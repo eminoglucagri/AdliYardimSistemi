@@ -19,6 +19,7 @@ export const templates = pgTable("templates", {
   name: text("name").notNull(),
   type: text("type").notNull(), // violence, sexual, victim-status, etc.
   fields: jsonb("fields").notNull(), // Template field definitions
+  templateContent: text("template_content"), // Actual document template with placeholders
   version: text("version").default("1.0").notNull(),
   createdAt: timestamp("created_at").default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`now()`).notNull(),
