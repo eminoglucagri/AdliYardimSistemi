@@ -40,7 +40,7 @@ export default function WizardForm() {
   const [originalText, setOriginalText] = useState("");
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
   const [selectedFormat, setSelectedFormat] = useState("");
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [generatedNote, setGeneratedNote] = useState<any>(null);
 
   // AI Analysis Mutation
@@ -114,30 +114,40 @@ export default function WizardForm() {
         // Format adını konu başlığı olarak ayarla
         const format = formatOptions.find(f => f.id === formatId);
         
-        // AI verilerini string formatında forma aktar
-        const extractedData: Record<string, any> = {
-          subject: format?.name || String(fields.subject || ''),
-          pressStatus: String(fields.pressStatus || 'dustu'),
-          eventDate: String(fields.eventDate || ''),
-          eventDateTime: String(fields.eventDateTime || ''),
-          victimInfo: typeof fields.victimInfo === 'object' ? JSON.stringify(fields.victimInfo) : String(fields.victimInfo || ''),
-          maritalStatus: String(fields.maritalStatus || ''),
-          suspectInfo: typeof fields.suspectInfo === 'object' ? JSON.stringify(fields.suspectInfo) : String(fields.suspectInfo || ''),
-          crimeType: String(fields.crimeType || ''),
-          eventLocation: typeof fields.location === 'object' ? JSON.stringify(fields.location) : String(fields.location || fields.eventLocation || ''),
-          eventMethod: String(fields.eventMethod || fields.method || ''),
-          eventSummary: String(fields.eventSummary || fields.summary || ''),
-          injuryType: String(fields.injuryType || ''),
-          autopsyFindings: String(fields.autopsyFindings || ''),
-          suspectMeasures: String(fields.suspectMeasures || fields.measures || ''),
-          protectiveMeasures: String(fields.protectiveMeasures || fields.measures || ''),
+        // AI verilerini tamamen string formatında forma aktar
+        const extractedData: Record<string, string> = {};
+        
+        // Format adını konu olarak ayarla
+        extractedData.subject = format?.name || '';
+        
+        // Tüm AI verilerini string'e çevir
+        const convertToString = (value: any): string => {
+          if (value === null || value === undefined) return '';
+          if (typeof value === 'string') return value;
+          if (typeof value === 'object') return JSON.stringify(value);
+          return String(value);
         };
         
-        // Diğer alanları da string olarak ekle
+        // Ana alanları manuel olarak ayarla
+        extractedData.pressStatus = convertToString(fields.pressStatus || 'dustu');
+        extractedData.eventDate = convertToString(fields.eventDate);
+        extractedData.eventDateTime = convertToString(fields.eventDateTime);
+        extractedData.victimInfo = convertToString(fields.victimInfo || fields.victim);
+        extractedData.maritalStatus = convertToString(fields.maritalStatus);
+        extractedData.suspectInfo = convertToString(fields.suspectInfo || fields.suspect);
+        extractedData.crimeType = convertToString(fields.crimeType);
+        extractedData.eventLocation = convertToString(fields.eventLocation || fields.location);
+        extractedData.eventMethod = convertToString(fields.eventMethod || fields.method);
+        extractedData.eventSummary = convertToString(fields.eventSummary || fields.summary);
+        extractedData.injuryType = convertToString(fields.injuryType);
+        extractedData.autopsyFindings = convertToString(fields.autopsyFindings);
+        extractedData.suspectMeasures = convertToString(fields.suspectMeasures || fields.measures);
+        extractedData.protectiveMeasures = convertToString(fields.protectiveMeasures || fields.measures);
+        
+        // Diğer tüm alanları da string olarak ekle
         Object.keys(fields).forEach(key => {
-          if (!extractedData[key]) {
-            const value = fields[key];
-            extractedData[key] = typeof value === 'object' ? JSON.stringify(value) : String(value || '');
+          if (!extractedData.hasOwnProperty(key)) {
+            extractedData[key] = convertToString(fields[key]);
           }
         });
         
