@@ -4,6 +4,8 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { analyzePoliceReport, generateJudicialDocument } from "./services/openai";
 import { generateWordDocument, generatePDFFromHTML } from "./services/document-generator";
+import { seedTemplates } from "./seed-templates";
+import { createAdminUser } from "./create-admin";
 import multer from "multer";
 import { z } from "zod";
 
@@ -208,6 +210,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.deleteUser(req.params.id);
       res.sendStatus(204);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Create admin user endpoint (for initial setup - no auth required)
+  app.post("/api/create-admin", async (req, res, next) => {
+    try {
+      const result = await createAdminUser();
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Seed templates endpoint (for initial setup)
+  app.post("/api/seed-templates", requireAdmin, async (req, res, next) => {
+    try {
+      const result = await seedTemplates();
+      res.json(result);
     } catch (error) {
       next(error);
     }
