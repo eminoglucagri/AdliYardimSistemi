@@ -19,36 +19,74 @@ export interface AIAnalysisResult {
 export async function analyzePoliceReport(text: string): Promise<AIAnalysisResult> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini", // Daha hızlı model
       messages: [
         {
           role: "system",
-          content: `Sen Türk adli sisteminde uzman bir yapay zeka asistanısın. Emniyet bilgi notlarını analiz ederek önemli bilgileri çıkarıyorsun.
+          content: `Sen Türk adli sisteminde uzman bir asistansın. Emniyet bilgi notlarını analiz et.
           
-          Aşağıdaki formatlardan hangisinin uygun olduğunu belirle:
-          - violence: Kadına ve Çocuğa Şiddet (aile içi şiddet, çocuk istismarı)
-          - sexual: Cinsel Saldırı/İstismar
-          - victim-status: Mağdurun Vasıf Sebebiyle Önem Arz Eden Olaylar (devlet görevlisi, tanınmış kişiler)
-          - suspect-status: Şüphelinin Vasıf Sebebiyle Önem Arz Eden Olaylar (devlet görevlisi, tanınmış kişiler)
-          - legal-personnel: Hâkim-Savcı-Avukat Olayları
-          - organized-crime: Organize Suç Örgütü veya Ekonomik Suçlar
-          - public-order: Kamu Düzenine Karşı İşlenen Suçlar
-          - accidents: Patlama, Doğal Olay, Kazalar, Trafik Kazaları
+          Formatlardan birini seç:
+          - violence: Kadına/Çocuğa Şiddet
+          - sexual: Cinsel Saldırı
+          - victim-status: Mağdur Vasıf
+          - suspect-status: Şüpheli Vasıf
+          - legal-personnel: Hâkim-Savcı-Avukat
+          - organized-crime: Organize Suç
+          - public-order: Kamu Düzeni
+          - accidents: Kaza/Patlama
           
-          Metinden mümkün olduğunca fazla bilgi çıkar. Eksik bilgileri null olarak bırak.
-          extractedFields alanında tüm çıkarılan bilgileri detaylı olarak ver.
-          
-          JSON formatında yanıt ver.`
+          Sadece metinde açıkça belirtilen bilgileri çıkar.
+          JSON formatında kısa ve öz yanıt ver.`
         },
         {
           role: "user",
-          content: `Bu emniyet bilgi notunu analiz et ve önemli bilgileri çıkar: ${text}`
+          content: `Analiz et: ${text.substring(0, 3000)}` // Metin uzunluğunu sınırla
         }
       ],
       response_format: { type: "json_object" },
+      temperature: 0.3, // Daha tutarlı sonuçlar için
+      max_tokens: 1000, // Token limiti
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    // Basit alan eşlemesi yap
+    const extractedFields: Record<string, any> = {};
+    
+    // Temel alanları direkt aktar
+    if (result.eventDate) extractedFields.eventDate = result.eventDate;
+    if (result.eventDateTime) extractedFields.eventDateTime = result.eventDateTime;
+    if (result.suspect) extractedFields.suspectInfo = result.suspect;
+    if (result.victim) extractedFields.victimInfo = result.victim;
+    if (result.crimeType) extractedFields.crimeType = result.crimeType;
+    if (result.location) extractedFields.eventLocation = result.location;
+    if (result.summary) extractedFields.eventSummary = result.summary;
+    if (result.method) extractedFields.eventMethod = result.method;
+    if (result.maritalStatus) extractedFields.maritalStatus = result.maritalStatus;
+    if (result.injuryType) extractedFields.injuryType = result.injuryType;
+    if (result.measures) extractedFields.suspectMeasures = result.measures;
+    if (result.pressStatus) extractedFields.pressStatus = result.pressStatus;
+    
+    // Konu başlığını format tipine göre ayarla
+    const formatNames: Record<string, string> = {
+      'violence': 'Kadına ve Çocuğa Şiddet',
+      'sexual': 'Cinsel Saldırı / İstismar',
+      'victim-status': 'Mağdurun Vasıf Sebebiyle Önem Arz Eden Olaylar',
+      'suspect-status': 'Şüphelinin Vasıf Sebebiyle Önem Arz Eden Olaylar',
+      'legal-personnel': 'Hâkim - Savcı - Avukat Olayları',
+      'organized-crime': 'Organize Suç Örgütü',
+      'public-order': 'Kamu Düzenine Karşı İşlenen Suçlar',
+      'accidents': 'Patlama, Doğal Olay, Kazalar'
+    };
+    
+    if (result.suggestedFormat && formatNames[result.suggestedFormat]) {
+      extractedFields.subject = formatNames[result.suggestedFormat];
+    }
+    
+    // Basın durumu default
+    if (!extractedFields.pressStatus) {
+      extractedFields.pressStatus = 'dustu';
+    }
     
     return {
       eventDate: result.eventDate,
@@ -58,7 +96,7 @@ export async function analyzePoliceReport(text: string): Promise<AIAnalysisResul
       location: result.location,
       summary: result.summary,
       suggestedFormat: result.suggestedFormat,
-      extractedFields: result.extractedFields || {},
+      extractedFields: { ...extractedFields, ...result.extractedFields },
     };
   } catch (error) {
     console.error("AI analysis failed:", error);

@@ -103,58 +103,82 @@ export default function WizardForm() {
   const handleFormatSelect = (formatId: string) => {
     setSelectedFormat(formatId);
     
-    // AI analizinden gelen verileri forma aktar
-    if (aiAnalysis?.extractedFields) {
-      const extractedData: Record<string, any> = {};
-      const fields = aiAnalysis.extractedFields;
+    // Format seçildiğinde AI verilerini forma aktar
+    if (currentStep === 3) {
+      setCurrentStep(4);
       
-      // Tarih alanları
-      if (fields.olay?.olayTarihi) {
-        extractedData.eventDate = fields.olay.olayTarihi;
-      }
-      if (fields.olay?.olaySaati) {
-        extractedData.eventDateTime = `${fields.olay.olayTarihi || ''} ${fields.olay.olaySaati}`;
-      }
-      
-      // Mağdur bilgileri
-      if (fields.maktul || fields.magdur) {
-        const victim = fields.maktul || fields.magdur;
-        extractedData.victimInfo = `${victim.adSoyad || ''} - ${victim.dogumTarihi || ''} - ${victim.meslek || ''}`;
-        extractedData.maritalStatus = victim.medeniDurum || '';
-      }
-      
-      // Şüpheli bilgileri
-      if (fields.supheli) {
-        extractedData.suspectInfo = `${fields.supheli.adSoyad || ''} - ${fields.supheli.dogumTarihi || ''} - ${fields.supheli.meslek || ''}`;
-        if (fields.supheli.maktulleIliski) {
-          extractedData.suspectInfo += ` - Mağdur ile ilişkisi: ${fields.supheli.maktulleIliski}`;
+      // AI analizinden gelen verileri forma aktar
+      if (aiAnalysis?.extractedFields) {
+        const extractedData: Record<string, any> = {};
+        const fields = aiAnalysis.extractedFields;
+        
+        // Konu başlığı
+        const format = formatOptions.find(f => f.id === formatId);
+        extractedData.subject = format?.name || '';
+        
+        // Basın durumu - her zaman seç
+        extractedData.pressStatus = 'dustu'; // Default olarak düştü
+        
+        // Tarih alanları
+        if (fields.olay?.olayTarihi || fields.eventDate) {
+          extractedData.eventDate = fields.olay?.olayTarihi || fields.eventDate || '';
         }
+        if (fields.olay?.olaySaati || fields.eventTime) {
+          const date = fields.olay?.olayTarihi || fields.eventDate || '';
+          const time = fields.olay?.olaySaati || fields.eventTime || '';
+          extractedData.eventDateTime = `${date}T${time}`;
+        }
+        
+        // Mağdur bilgileri
+        if (fields.maktul || fields.magdur || fields.victim) {
+          const victim = fields.maktul || fields.magdur || fields.victim;
+          let victimText = '';
+          if (victim.adSoyad || victim.name) victimText += victim.adSoyad || victim.name;
+          if (victim.dogumTarihi || victim.birthDate) victimText += ` (${victim.dogumTarihi || victim.birthDate})`;
+          if (victim.meslek || victim.job) victimText += ` - ${victim.meslek || victim.job}`;
+          extractedData.victimInfo = victimText || 'Bilgi yok';
+          extractedData.maritalStatus = victim.medeniDurum || '';
+        }
+        
+        // Şüpheli bilgileri
+        if (fields.supheli || fields.suspect) {
+          const suspect = fields.supheli || fields.suspect;
+          let suspectText = '';
+          if (suspect.adSoyad || suspect.name) suspectText += suspect.adSoyad || suspect.name;
+          if (suspect.dogumTarihi || suspect.birthDate) suspectText += ` (${suspect.dogumTarihi || suspect.birthDate})`;
+          if (suspect.meslek || suspect.job) suspectText += ` - ${suspect.meslek || suspect.job}`;
+          if (suspect.maktulleIliski || suspect.relationship) {
+            suspectText += ` - Mağdur ile ilişkisi: ${suspect.maktulleIliski || suspect.relationship}`;
+          }
+          extractedData.suspectInfo = suspectText || 'Bilgi yok';
+        }
+        
+        // Olay bilgileri
+        if (fields.olay || fields.event) {
+          const event = fields.olay || fields.event;
+          extractedData.crimeType = event.olayTuru || event.type || fields.hukukiSurec?.muhtemelSucNiteligi || fields.crimeType || '';
+          extractedData.eventLocation = event.yer?.acikAdres || event.location || fields.location || '';
+          extractedData.eventMethod = event.eylemSekli || event.method || '';
+          extractedData.eventSummary = event.olayOzeti || event.summary || fields.summary || '';
+          extractedData.injuryType = fields.maktul?.yaralanmaDurumu || '';
+          extractedData.autopsyFindings = fields.maktul?.olum?.tespit || '';
+        }
+        
+        // Tedbir bilgileri
+        if (fields.hukukiSurec || fields.legal) {
+          const legal = fields.hukukiSurec || fields.legal;
+          extractedData.suspectMeasures = legal.koruyucuTedbir || legal.measures || '';
+          extractedData.protectiveMeasures = legal.koruyucuTedbir || legal.measures || '';
+        }
+        
+        // Önce AI verilerini, sonra extractedFields'i birleştir
+        const allExtractedData = {
+          ...extractedData,
+          ...fields, // Tüm extractedFields'i ekle
+        };
+        
+        setFormData(allExtractedData);
       }
-      
-      // Olay bilgileri
-      if (fields.olay) {
-        extractedData.crimeType = fields.olay.olayTuru || fields.hukukiSurec?.muhtemelSucNiteligi || '';
-        extractedData.eventLocation = fields.olay.yer?.acikAdres || '';
-        extractedData.eventMethod = fields.olay.eylemSekli || '';
-        extractedData.eventSummary = fields.olay.olayOzeti || '';
-        extractedData.injuryType = fields.maktul?.yaralanmaDurumu || '';
-        extractedData.autopsyFindings = fields.maktul?.olum?.tespit || '';
-      }
-      
-      // Tedbir bilgileri
-      if (fields.hukukiSurec) {
-        extractedData.suspectMeasures = fields.hukukiSurec.koruyucuTedbir || '';
-        extractedData.protectiveMeasures = fields.hukukiSurec.koruyucuTedbir || '';
-      }
-      
-      // Konu başlığı
-      const format = formatOptions.find(f => f.id === formatId);
-      extractedData.subject = format?.name || '';
-      
-      // Basın durumu
-      extractedData.pressStatus = fields.olay?.ihbar ? 'dustu' : 'dusmedi';
-      
-      setFormData(extractedData);
     }
   };
 
@@ -352,7 +376,7 @@ export default function WizardForm() {
                       ? "border-primary bg-primary/5"
                       : "border-border hover:border-primary"
                   }`}
-                  onClick={() => handleFormatSelect(format.id)}
+                  onClick={() => setSelectedFormat(format.id)}
                   data-testid={`format-option-${format.id}`}
                 >
                   <div className="flex items-start space-x-3">
@@ -374,7 +398,7 @@ export default function WizardForm() {
                 Geri
               </Button>
               <Button
-                onClick={() => setCurrentStep(4)}
+                onClick={() => handleFormatSelect(selectedFormat)}
                 disabled={!selectedFormat}
                 data-testid="button-to-step4"
               >
