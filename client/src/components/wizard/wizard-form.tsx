@@ -288,22 +288,30 @@ export default function WizardForm() {
                 <h3 className="font-medium text-foreground mb-2">Tespit Edilen Bilgiler</h3>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   {aiAnalysis.eventDate && (
-                    <li>• Olay Tarihi: <span className="text-foreground">{typeof aiAnalysis.eventDate === 'object' ? JSON.stringify(aiAnalysis.eventDate) : String(aiAnalysis.eventDate)}</span></li>
+                    <li>• Olay Tarihi: <span className="text-foreground">{String(aiAnalysis.eventDate)}</span></li>
                   )}
                   {aiAnalysis.suspect && (
-                    <li>• Şüpheli: <span className="text-foreground">{typeof aiAnalysis.suspect === 'object' ? JSON.stringify(aiAnalysis.suspect) : String(aiAnalysis.suspect)}</span></li>
+                    <li>• Şüpheli: <span className="text-foreground">
+                      {typeof aiAnalysis.suspect === 'object' ? 
+                        `${aiAnalysis.suspect.name || 'Bilinmiyor'} (${aiAnalysis.suspect.age || ''} yaş${aiAnalysis.suspect.profession ? ', ' + aiAnalysis.suspect.profession : ''})` 
+                        : String(aiAnalysis.suspect)}
+                    </span></li>
                   )}
                   {aiAnalysis.victim && (
-                    <li>• Mağdur: <span className="text-foreground">{typeof aiAnalysis.victim === 'object' ? JSON.stringify(aiAnalysis.victim) : String(aiAnalysis.victim)}</span></li>
+                    <li>• Mağdur: <span className="text-foreground">
+                      {typeof aiAnalysis.victim === 'object' ? 
+                        `${aiAnalysis.victim.name || 'Bilinmiyor'} (${aiAnalysis.victim.age || ''} yaş${aiAnalysis.victim.profession ? ', ' + aiAnalysis.victim.profession : ''})` 
+                        : String(aiAnalysis.victim)}
+                    </span></li>
                   )}
                   {aiAnalysis.crimeType && (
-                    <li>• Suç Türü: <span className="text-foreground">{typeof aiAnalysis.crimeType === 'object' ? JSON.stringify(aiAnalysis.crimeType) : String(aiAnalysis.crimeType)}</span></li>
+                    <li>• Suç Türü: <span className="text-foreground">{String(aiAnalysis.crimeType)}</span></li>
                   )}
                   {aiAnalysis.location && (
-                    <li>• Yer: <span className="text-foreground">{typeof aiAnalysis.location === 'object' ? JSON.stringify(aiAnalysis.location) : String(aiAnalysis.location)}</span></li>
+                    <li>• Yer: <span className="text-foreground">{String(aiAnalysis.location)}</span></li>
                   )}
                   {aiAnalysis.summary && (
-                    <li>• Özet: <span className="text-foreground">{typeof aiAnalysis.summary === 'object' ? JSON.stringify(aiAnalysis.summary) : String(aiAnalysis.summary)}</span></li>
+                    <li>• Özet: <span className="text-foreground">{String(aiAnalysis.summary).substring(0, 100)}...</span></li>
                   )}
                 </ul>
               </div>
