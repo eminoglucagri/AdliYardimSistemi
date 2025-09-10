@@ -63,7 +63,7 @@ export default function WizardForm() {
   });
 
   // Get Templates
-  const { data: templates } = useQuery({
+  const { data: templates } = useQuery<any[]>({
     queryKey: ["/api/templates"],
     enabled: currentStep >= 3,
   });
@@ -102,6 +102,60 @@ export default function WizardForm() {
 
   const handleFormatSelect = (formatId: string) => {
     setSelectedFormat(formatId);
+    
+    // AI analizinden gelen verileri forma aktar
+    if (aiAnalysis?.extractedFields) {
+      const extractedData: Record<string, any> = {};
+      const fields = aiAnalysis.extractedFields;
+      
+      // Tarih alanları
+      if (fields.olay?.olayTarihi) {
+        extractedData.eventDate = fields.olay.olayTarihi;
+      }
+      if (fields.olay?.olaySaati) {
+        extractedData.eventDateTime = `${fields.olay.olayTarihi || ''} ${fields.olay.olaySaati}`;
+      }
+      
+      // Mağdur bilgileri
+      if (fields.maktul || fields.magdur) {
+        const victim = fields.maktul || fields.magdur;
+        extractedData.victimInfo = `${victim.adSoyad || ''} - ${victim.dogumTarihi || ''} - ${victim.meslek || ''}`;
+        extractedData.maritalStatus = victim.medeniDurum || '';
+      }
+      
+      // Şüpheli bilgileri
+      if (fields.supheli) {
+        extractedData.suspectInfo = `${fields.supheli.adSoyad || ''} - ${fields.supheli.dogumTarihi || ''} - ${fields.supheli.meslek || ''}`;
+        if (fields.supheli.maktulleIliski) {
+          extractedData.suspectInfo += ` - Mağdur ile ilişkisi: ${fields.supheli.maktulleIliski}`;
+        }
+      }
+      
+      // Olay bilgileri
+      if (fields.olay) {
+        extractedData.crimeType = fields.olay.olayTuru || fields.hukukiSurec?.muhtemelSucNiteligi || '';
+        extractedData.eventLocation = fields.olay.yer?.acikAdres || '';
+        extractedData.eventMethod = fields.olay.eylemSekli || '';
+        extractedData.eventSummary = fields.olay.olayOzeti || '';
+        extractedData.injuryType = fields.maktul?.yaralanmaDurumu || '';
+        extractedData.autopsyFindings = fields.maktul?.olum?.tespit || '';
+      }
+      
+      // Tedbir bilgileri
+      if (fields.hukukiSurec) {
+        extractedData.suspectMeasures = fields.hukukiSurec.koruyucuTedbir || '';
+        extractedData.protectiveMeasures = fields.hukukiSurec.koruyucuTedbir || '';
+      }
+      
+      // Konu başlığı
+      const format = formatOptions.find(f => f.id === formatId);
+      extractedData.subject = format?.name || '';
+      
+      // Basın durumu
+      extractedData.pressStatus = fields.olay?.ihbar ? 'dustu' : 'dusmedi';
+      
+      setFormData(extractedData);
+    }
   };
 
   const handleGenerateDocument = () => {
@@ -350,47 +404,105 @@ export default function WizardForm() {
               </p>
             </div>
 
-            {/* Dynamic form fields based on selected format */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="subject">Konu/Başlık</Label>
-                <Input
-                  id="subject"
-                  placeholder="Bilgi notu konusu"
-                  value={formData.subject || ""}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  data-testid="input-subject"
-                />
-              </div>
+            {/* Dynamic form fields based on selected template */}
+            {templates && selectedFormat && (() => {
+              const selectedTemplate = templates.find((t: any) => t.type === selectedFormat);
+              if (!selectedTemplate) return null;
               
-              <div className="space-y-2">
-                <Label htmlFor="pressStatus">Basına Düşme Durumu</Label>
-                <Select
-                  value={formData.pressStatus || ""}
-                  onValueChange={(value) => setFormData({ ...formData, pressStatus: value })}
-                >
-                  <SelectTrigger data-testid="select-press-status">
-                    <SelectValue placeholder="Seçiniz" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dustu">Düştü</SelectItem>
-                    <SelectItem value="dusmedi">Düşmedi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="additionalInfo">Ek Bilgiler</Label>
-              <Textarea
-                id="additionalInfo"
-                className="min-h-24 resize-none"
-                placeholder="Ek bilgiler ve açıklamalar..."
-                value={formData.additionalInfo || ""}
-                onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
-                data-testid="textarea-additional-info"
-              />
-            </div>
+              const fields = selectedTemplate.fields as Record<string, any>;
+              const fieldEntries = Object.entries(fields);
+              
+              return (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {fieldEntries.map(([key, field]: [string, any]) => {
+                      if (field.type === 'textarea') return null; // Render textareas separately
+                      
+                      return (
+                        <div key={key} className="space-y-2">
+                          <Label htmlFor={key}>
+                            {field.label}
+                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                          </Label>
+                          
+                          {field.type === 'text' && (
+                            <Input
+                              id={key}
+                              placeholder={field.label}
+                              value={formData[key] || ""}
+                              onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                              required={field.required}
+                              data-testid={`input-${key}`}
+                            />
+                          )}
+                          
+                          {field.type === 'date' && (
+                            <Input
+                              id={key}
+                              type="date"
+                              value={formData[key] || ""}
+                              onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                              required={field.required}
+                              data-testid={`input-${key}`}
+                            />
+                          )}
+                          
+                          {field.type === 'datetime' && (
+                            <Input
+                              id={key}
+                              type="datetime-local"
+                              value={formData[key] || ""}
+                              onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                              required={field.required}
+                              data-testid={`input-${key}`}
+                            />
+                          )}
+                          
+                          {field.type === 'select' && (
+                            <Select
+                              value={formData[key] || ""}
+                              onValueChange={(value) => setFormData({ ...formData, [key]: value })}
+                            >
+                              <SelectTrigger data-testid={`select-${key}`}>
+                                <SelectValue placeholder="Seçiniz" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options?.map((option: string) => (
+                                  <SelectItem key={option} value={option.toLowerCase().replace(/\s+/g, '')}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Render all textarea fields */}
+                  <div className="space-y-4">
+                    {fieldEntries.filter(([_, field]) => field.type === 'textarea').map(([key, field]: [string, any]) => (
+                      <div key={key} className="space-y-2">
+                        <Label htmlFor={key}>
+                          {field.label}
+                          {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </Label>
+                        <Textarea
+                          id={key}
+                          className="min-h-24 resize-none"
+                          placeholder={field.label}
+                          value={formData[key] || ""}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          required={field.required}
+                          data-testid={`textarea-${key}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="flex justify-between">
               <Button
