@@ -3,4 +3,5 @@ deployment:
   tasks:
     - npm install --production
     - npm run build
-    # - npm run db:migrate
+    # Eğer migrate komutunuz varsa açın:
+     - npm run db:migrate
