@@ -1,22 +1,6 @@
 ---
 deployment:
   tasks:
-    # Node.js bağımlılıklarını yükle
-    - export DEPLOYPATH=/home/whvfughu/bilginotu
-    - /bin/cp -R * $DEPLOYPATH
-    - cd $DEPLOYPATH
-    
-    # Node.js versiyonunu ayarla (cPanel Node.js uygulaması için)
-    - export NODE_VERSION=18
-    
-    # Bağımlılıkları yükle
     - npm install --production
-    
-    # Frontend'i build et
     - npm run build
-    
-    # Veritabanı şemasını migrate et (isteğe bağlı)
     # - npm run db:migrate
-    
-    # PM2 ile uygulamayı yeniden başlat (Node.js App varsa)
-    # - pm2 restart all || pm2 start server/index.js --name "adli-verdim-sistemi"
