@@ -4,33 +4,37 @@ const defaultTemplates = [
   {
     name: "Kadına ve Çocuğa Şiddet",
     type: "violence",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH: {{eventDate}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
+İlgi bilgi notunda; {{eventDate}} tarihinde {{eventLocation}} adresinde meydana gelen olay hakkında aşağıdaki bilgiler tespit edilmiştir.
+
 MAĞDUR BİLGİLERİ:
-{{victimInfo}}
-Medeni Durumu: {{maritalStatus}}
+Mağdur {{victimInfo}} {{#if maritalStatus}}, medeni durumu {{maritalStatus}}{{/if}} olarak kayıtlara geçmiştir.
 
 ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}
+Şüpheli {{suspectInfo}} olarak tespit edilmiştir.
 
 SUÇ BİLGİLERİ:
-Suç Adı/Sevk: {{crimeType}}
-Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
-{{#if injuryType}}Yaralanmanın Niteliği: {{injuryType}}{{/if}}
-{{#if autopsyFindings}}Ölü Muayene/Otopsi Bulguları: {{autopsyFindings}}{{/if}}
+{{crimeType}} kapsamında değerlendirilen olay, {{eventLocation}} adresinde gerçekleşmiştir. {{#if eventMethod}}Eylem {{eventMethod}} şeklinde gerçekleştirilmiştir.{{/if}} {{#if injuryType}}Mağdurun yaralanması {{injuryType}} olarak tespit edilmiştir.{{/if}} {{#if autopsyFindings}}Yapılan ilk muayene/otopsi neticesinde {{autopsyFindings}} bulgularına ulaşılmıştır.{{/if}}
 
-TEDBİRLER:
-{{#if protectiveMeasures}}Mağdur Hakkında Koruyucu Tedbir: {{protectiveMeasures}}{{/if}}
-{{#if suspectMeasures}}Şüpheli Hakkındaki Tedbir: {{suspectMeasures}}{{/if}}
+ALINAN TEDBİRLER:
+{{#if protectiveMeasures}}Mağdur hakkında {{protectiveMeasures}} uygulanmıştır.{{/if}} {{#if suspectMeasures}}Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -50,36 +54,40 @@ OLAYIN ÖZETİ:
   {
     name: "Cinsel Saldırı / İstismar",
     type: "sexual",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH: {{eventDate}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
+İlgi bilgi notunda; {{eventDate}} tarihinde meydana gelen cinsel içerikli olay hakkında aşağıdaki bilgiler tespit edilmiştir.
+
 MAĞDUR BİLGİLERİ:
-{{victimInfo}}
-{{#if maritalStatus}}Medeni Durumu: {{maritalStatus}}{{/if}}
+Mağdur {{victimInfo}} {{#if maritalStatus}}, medeni durumu {{maritalStatus}}{{/if}} olarak kayıtlara geçmiştir.
 
 ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}
-{{#if relationship}}Şüpheli ve Mağdur Arasındaki İlişki: {{relationship}}{{/if}}
+Şüpheli {{suspectInfo}} olarak tespit edilmiştir. {{#if relationship}}Şüpheli ile mağdur arasında {{relationship}} ilişkisi bulunmaktadır.{{/if}}
 
 SUÇ BİLGİLERİ:
-Suç Adı/Sevk: {{crimeType}}
-Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
-{{#if eventRepetition}}Eylemin Tekrarlanma Durumu: {{eventRepetition}}{{/if}}
+{{crimeType}} kapsamında değerlendirilen olay, {{eventLocation}} adresinde gerçekleşmiştir. {{#if eventMethod}}Eylem {{eventMethod}} şeklinde gerçekleştirilmiştir.{{/if}} {{#if eventRepetition}}Eylemin {{eventRepetition}} olduğu tespit edilmiştir.{{/if}}
 
 {{#if medicalReport}}DOKTOR RAPORU:
-{{medicalReport}}{{/if}}
+Yapılan tıbbi muayene neticesinde {{medicalReport}} tespit edilmiştir.{{/if}}
 
-TEDBİRLER:
-{{#if protectiveMeasures}}Mağdur Hakkında Koruyucu Tedbir: {{protectiveMeasures}}{{/if}}
-{{#if suspectMeasures}}Şüpheli Hakkındaki Tedbir: {{suspectMeasures}}{{/if}}
+ALINAN TEDBİRLER:
+{{#if protectiveMeasures}}Mağdur hakkında {{protectiveMeasures}} uygulanmıştır.{{/if}} {{#if suspectMeasures}}Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -100,29 +108,37 @@ OLAYIN ÖZETİ:
   {
     name: "Mağdurun Vasıf Sebebiyle Önem Arz Eden Olaylar",
     type: "victim-status",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH: {{eventDate}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
+İlgi bilgi notunda; {{eventDate}} tarihinde meydana gelen ve mağdurun vasıfı sebebiyle önem arz eden olay hakkında aşağıdaki bilgiler tespit edilmiştir.
+
 MAĞDUR BİLGİLERİ:
-{{victimInfo}}
+Mağdur {{victimInfo}} olarak tespit edilmiştir.
 
 ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}
+Şüpheli {{suspectInfo}} olarak kayıtlara geçmiştir.
 
 SUÇ BİLGİLERİ:
-Suç Adı/Sevk: {{crimeType}}
-Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
+{{crimeType}} kapsamında değerlendirilen olay, {{eventLocation}} adresinde meydana gelmiştir. {{#if eventMethod}}Eylem {{eventMethod}} şeklinde gerçekleştirilmiştir.{{/if}}
 
-{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
-{{suspectMeasures}}{{/if}}
+{{#if suspectMeasures}}ALINAN TEDBİRLER:
+Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -138,29 +154,37 @@ OLAYIN ÖZETİ:
   {
     name: "Şüphelinin Vasıf Sebebiyle Önem Arz Eden Olaylar",
     type: "suspect-status",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH: {{eventDate}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
+İlgi bilgi notunda; {{eventDate}} tarihinde meydana gelen ve şüphelinin vasıfı sebebiyle önem arz eden olay hakkında aşağıdaki bilgiler tespit edilmiştir.
+
 ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}
+Şüpheli {{suspectInfo}} olarak tespit edilmiştir.
 
 {{#if victimInfo}}MAĞDUR BİLGİLERİ:
-{{victimInfo}}{{/if}}
+Mağdur {{victimInfo}} olarak kayıtlara geçmiştir.{{/if}}
 
 SUÇ BİLGİLERİ:
-Suç Adı/Sevk: {{crimeType}}
-Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
+{{crimeType}} kapsamında değerlendirilen olay, {{eventLocation}} adresinde meydana gelmiştir. {{#if eventMethod}}Eylem {{eventMethod}} şeklinde gerçekleştirilmiştir.{{/if}}
 
-{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
-{{suspectMeasures}}{{/if}}
+{{#if suspectMeasures}}ALINAN TEDBİRLER:
+Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -176,30 +200,37 @@ OLAYIN ÖZETİ:
   {
     name: "Hâkim - Savcı - Avukat Olayları",
     type: "legal-personnel",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH: {{eventDate}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
+İlgi bilgi notunda; {{eventDate}} tarihinde meydana gelen ve adli personeli ilgilendiren olay hakkında aşağıdaki bilgiler tespit edilmiştir.
+
 ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}
+Şüpheli {{suspectInfo}} olarak tespit edilmiştir.
 
 MAĞDUR BİLGİLERİ:
-{{victimInfo}}
+Mağdur {{victimInfo}} olarak kayıtlara geçmiştir.
 
 SUÇ BİLGİLERİ:
-Suç Adı/Sevk: {{crimeType}}
-Eylemin Gerçekleşme Şekli: {{eventMethod}}
-Eylemin Yeri: {{eventLocation}}
+{{crimeType}} kapsamında değerlendirilen olay {{eventLocation}} lokasyonunda meydana gelmiştir. {{#if eventMethod}}Eylem {{eventMethod}} şeklinde gerçekleştirilmiştir.{{/if}}
 
-{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
-{{suspectMeasures}}{{/if}}
+{{#if suspectMeasures}}ALINAN TEDBİRLER:
+Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -216,31 +247,37 @@ OLAYIN ÖZETİ:
   {
     name: "Organize Suç Örgütü - Toplumun Geneline Yayılan Ekonomi Alanında İşlenen Suçlar",
     type: "organized-crime",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH: {{eventDate}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
+İlgi bilgi notunda; {{eventDate}} tarihinde tespit edilen organize suç örgütü ve faaliyetleri hakkında aşağıdaki bilgiler elde edilmiştir.
+
 ÖRGÜT BİLGİLERİ:
-Örgütün Kuruluş Amacı: {{organizationPurpose}}
+Örgütün kuruluş amacı {{organizationPurpose}} olarak tespit edilmiştir.
 
 ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}
-{{#if suspectJob}}Şüphelinin Mesleği/Görevi: {{suspectJob}}{{/if}}
+{{suspectInfo}} {{#if suspectJob}}Şüphelinin mesleği/görevi {{suspectJob}} olarak kayıtlara geçmiştir.{{/if}}
 
 SUÇ BİLGİLERİ:
-Organize Şekilde İşlenen Suç Adı/Sevk: {{organizedCrime}}
-Mağdur ve Şüpheli Sayısı: {{victimSuspectCount}}
-{{#if damageAmount}}Zarar Miktarı: {{damageAmount}}{{/if}}
+Organize şekilde işlenen suç {{organizedCrime}} olarak tespit edilmiştir. Mağdur ve şüpheli sayısı {{victimSuspectCount}} olarak belirlenmistir. {{#if damageAmount}}Oluşan zarar miktarı {{damageAmount}} olarak hesaplanmıştır.{{/if}}
 
-{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
-{{suspectMeasures}}{{/if}}
+{{#if suspectMeasures}}ALINAN TEDBİRLER:
+Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -258,29 +295,34 @@ OLAYIN ÖZETİ:
   {
     name: "Kamu Düzenine Karşı İşlenen Suçlar",
     type: "public-order",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH: {{eventDate}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
+İlgi bilgi notunda; {{eventDate}} tarihinde kamu düzenine karşı işlenen suç hakkında aşağıdaki bilgiler tespit edilmiştir.
+
 ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}
-{{#if mentalDisability}}Zihinsel Engellilik Durumu: {{mentalDisability}}{{/if}}
+Şüpheli {{suspectInfo}} olarak tespit edilmiştir. {{#if mentalDisability}}Şüphelinin zihinsel engellilik durumu {{mentalDisability}} olarak kayıtlara geçmiştir.{{/if}}
 
 SUÇ BİLGİLERİ:
-Suç Adı/Sevk: {{crimeType}}
-{{#if targetGroup}}Eylemin Yöneldiği Kesim: {{targetGroup}}{{/if}}
-Eylemin Gerçekleşme Şekli ve Yeri: {{eventLocation}}
-{{#if speechContent}}Söz ve Eylemlerin İçeriği: {{speechContent}}{{/if}}
+{{crimeType}} kapsamında değerlendirilen olay {{eventLocation}} lokasyonunda meydana gelmiştir. {{#if targetGroup}}Eylem {{targetGroup}} kesimine yönelik olarak gerçekleştirilmiştir.{{/if}} {{#if speechContent}}Söz ve eylemlerin içeriği {{speechContent}} şeklinde tespit edilmiştir.{{/if}}
 
-{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
-{{suspectMeasures}}{{/if}}
+{{#if suspectMeasures}}ALINAN TEDBİRLER:
+Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },
@@ -298,32 +340,37 @@ OLAYIN ÖZETİ:
   {
     name: "Patlama, Doğal Olay, Kazalar",
     type: "accidents",
-    templateContent: `T.C.
+    templateContent: `HİZMETE ÖZEL
+
+T.C.
 ANKARA CUMHURİYET BAŞSAVCILIĞI
+{{eventDate}}
+
 BİLGİ NOTU
 
 KONU: {{subject}}
-TARİH VE SAAT: {{eventDateTime}}
 BASINA DÜŞME DURUMU: {{pressStatus}}
 
-{{#if victimInfo}}ÖLEN/MAĞDUR BİLGİLERİ:
+İlgi bilgi notunda; {{eventDateTime}} tarih ve saatinde meydana gelen olay hakkında aşağıdaki bilgiler tespit edilmiştir.
+
+{{#if victimInfo}}MAĞDUR/ÖLEN BİLGİLERİ:
 {{victimInfo}}{{/if}}
 
 {{#if suspectInfo}}ŞÜPHELİ BİLGİLERİ:
-{{suspectInfo}}{{/if}}
+Şüpheli {{suspectInfo}} olarak tespit edilmiştir.{{/if}}
 
 OLAY BİLGİLERİ:
-Suç Adı/Sevk: {{crimeType}}
-Olayın Gerçekleşme Şekli: {{eventMethod}}
-{{#if healthStatus}}Yaralıların Sağlık Durumları: {{healthStatus}}{{/if}}
-{{#if faultSituations}}Kusur Durumları: {{faultSituations}}{{/if}}
-{{#if trafficViolations}}Trafik İhlalleri: {{trafficViolations}}{{/if}}
+{{crimeType}} kapsamında değerlendirilen olay, {{eventMethod}} şeklinde meydana gelmiştir. {{#if healthStatus}}Yaralıların sağlık durumları {{healthStatus}} olarak tespit edilmiştir.{{/if}} {{#if faultSituations}}Kusur durumları {{faultSituations}} olarak belirlenmistir.{{/if}} {{#if trafficViolations}}Trafik kazası yönünden {{trafficViolations}} tespit edilmiştir.{{/if}}
 
-{{#if suspectMeasures}}ŞÜPHELİ HAKKINDAKİ TEDBİR:
-{{suspectMeasures}}{{/if}}
+{{#if suspectMeasures}}ALINAN TEDBİRLER:
+Şüpheli hakkında {{suspectMeasures}} tedbirleri alınmıştır.{{/if}}
 
-OLAYIN ÖZETİ:
-{{eventSummary}}`,
+OLAY VE İŞLEM ÖZETİ:
+{{eventSummary}}
+
+Bilgilerinize arz ederim.
+
+Ankara Cumhuriyet Başsavcılığı`,
     fields: {
       subject: { type: "text", label: "Konu", required: true },
       pressStatus: { type: "select", label: "Basına Düşme Durumu", options: ["Düştü", "Düşmedi"], required: true },

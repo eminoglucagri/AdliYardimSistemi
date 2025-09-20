@@ -92,7 +92,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Şablon bulunamadı" });
       }
 
-      const generatedDocument = await generateJudicialDocument(template, formData, aiAnalysis);
+      // Form verilerini AI verilerine öncelik vererek birleştir
+      const { mapAIToCanonical } = await import("./services/openai.js");
+      const canonicalData = mapAIToCanonical(aiAnalysis);
+      const finalData = { ...canonicalData, ...formData }; // Form verileri öncelikli
+      
+      const generatedDocument = await generateJudicialDocument(template, finalData, aiAnalysis);
       
       const note = await storage.createInformationNote({
         userId: req.user!.id,

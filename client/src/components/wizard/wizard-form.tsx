@@ -108,8 +108,26 @@ export default function WizardForm() {
       setCurrentStep(4);
       
       // AI analizinden gelen verileri forma aktar
-      if (aiAnalysis?.extractedFields) {
-        const fields = aiAnalysis.extractedFields;
+      if (aiAnalysis) {
+        // AI'dan gelen TÜM verileri topla (hem üst seviye hem extractedFields)
+        const allFields: Record<string, any> = {};
+        
+        // Önce üst seviye alanları ekle
+        if (aiAnalysis.eventDate) allFields.eventDate = aiAnalysis.eventDate;
+        if (aiAnalysis.location) allFields.eventLocation = aiAnalysis.location;
+        if (aiAnalysis.summary) allFields.eventSummary = aiAnalysis.summary;
+        if (aiAnalysis.crimeType) allFields.crimeType = aiAnalysis.crimeType;
+        if (aiAnalysis.victim) allFields.victim = aiAnalysis.victim;
+        if (aiAnalysis.suspect) allFields.suspect = aiAnalysis.suspect;
+        
+        // extractedFields'tan gelen verileri ekle (üst seviye alanları override etmesin)
+        if (aiAnalysis.extractedFields) {
+          for (const [key, value] of Object.entries(aiAnalysis.extractedFields)) {
+            if (!allFields[key] || key === 'subject') {
+              allFields[key] = value;
+            }
+          }
+        }
         
         // Format adını konu başlığı olarak ayarla
         const format = formatOptions.find(f => f.id === formatId);
@@ -129,13 +147,13 @@ export default function WizardForm() {
         };
         
         // Ana alanları manuel olarak ayarla
-        extractedData.pressStatus = convertToString(fields.pressStatus || ''); // Default yok
-        extractedData.eventDate = convertToString(fields.eventDate);
-        extractedData.eventDateTime = convertToString(fields.eventDateTime);
+        extractedData.pressStatus = convertToString(allFields.pressStatus || ''); // Default yok
+        extractedData.eventDate = convertToString(allFields.eventDate || '');
+        extractedData.eventDateTime = convertToString(allFields.eventDateTime || '');
         
         // Kişi bilgilerini güzel formatla
-        if (fields.victimInfo || fields.victim) {
-          const victim = fields.victimInfo || fields.victim;
+        if (allFields.victimInfo || allFields.victim) {
+          const victim = allFields.victimInfo || allFields.victim;
           if (typeof victim === 'object') {
             const v = victim as any;
             let result = v.name || '';
@@ -151,8 +169,8 @@ export default function WizardForm() {
           extractedData.victimInfo = '';
         }
         
-        if (fields.suspectInfo || fields.suspect) {
-          const suspect = fields.suspectInfo || fields.suspect;
+        if (allFields.suspectInfo || allFields.suspect) {
+          const suspect = allFields.suspectInfo || allFields.suspect;
           if (typeof suspect === 'object') {
             const s = suspect as any;
             let result = s.name || '';
@@ -168,24 +186,24 @@ export default function WizardForm() {
           extractedData.suspectInfo = '';
         }
         
-        extractedData.maritalStatus = convertToString(fields.maritalStatus);
-        extractedData.crimeType = convertToString(fields.crimeType);
-        extractedData.eventLocation = convertToString(fields.eventLocation || fields.location);
-        extractedData.eventMethod = convertToString(fields.eventMethod || fields.method);
-        extractedData.eventSummary = convertToString(fields.eventSummary || fields.summary);
-        extractedData.injuryType = convertToString(fields.injuryType);
-        extractedData.autopsyFindings = convertToString(fields.autopsyFindings);
-        extractedData.suspectMeasures = convertToString(fields.suspectMeasures || fields.measures);
-        extractedData.protectiveMeasures = convertToString(fields.protectiveMeasures || fields.measures);
+        extractedData.maritalStatus = convertToString(allFields.maritalStatus || '');
+        extractedData.crimeType = convertToString(allFields.crimeType || '');
+        extractedData.eventLocation = convertToString(allFields.eventLocation || allFields.location || '');
+        extractedData.eventMethod = convertToString(allFields.eventMethod || allFields.method || '');
+        extractedData.eventSummary = convertToString(allFields.eventSummary || allFields.summary || '');
+        extractedData.injuryType = convertToString(allFields.injuryType || '');
+        extractedData.autopsyFindings = convertToString(allFields.autopsyFindings || '');
+        extractedData.suspectMeasures = convertToString(allFields.suspectMeasures || allFields.measures || '');
+        extractedData.protectiveMeasures = convertToString(allFields.protectiveMeasures || allFields.measures || '');
         
         // Diğer tüm alanları da string olarak ekle
-        Object.keys(fields).forEach(key => {
+        Object.keys(allFields).forEach(key => {
           if (!extractedData.hasOwnProperty(key)) {
-            extractedData[key] = convertToString(fields[key]);
+            extractedData[key] = convertToString(allFields[key]);
           }
         });
         
-        console.log('AI\'dan gelen veriler:', JSON.stringify(fields, null, 2));
+        console.log('AI\'dan gelen veriler:', JSON.stringify(aiAnalysis, null, 2));
         console.log('Forma aktarılan veriler:', JSON.stringify(extractedData, null, 2));
         
         setFormData(extractedData);

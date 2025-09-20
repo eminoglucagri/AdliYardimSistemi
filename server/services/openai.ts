@@ -16,6 +16,57 @@ export interface AIAnalysisResult {
   extractedFields?: Record<string, any>;
 }
 
+// Standart veri haritalama fonksiyonu
+export function mapAIToCanonical(aiAnalysis: AIAnalysisResult): Record<string, any> {
+  const canonical: Record<string, any> = {};
+  
+  // AI'nın üst seviye alanlarını al
+  if (aiAnalysis.eventDate) canonical.eventDate = aiAnalysis.eventDate;
+  if (aiAnalysis.location) canonical.eventLocation = aiAnalysis.location;
+  if (aiAnalysis.summary) canonical.eventSummary = aiAnalysis.summary;
+  if (aiAnalysis.crimeType) canonical.crimeType = aiAnalysis.crimeType;
+  
+  // Kişi bilgilerini formatla
+  if (aiAnalysis.victim) {
+    canonical.victimInfo = formatPersonInfo(aiAnalysis.victim);
+  }
+  if (aiAnalysis.suspect) {
+    canonical.suspectInfo = formatPersonInfo(aiAnalysis.suspect);
+  }
+  
+  // extractedFields'tan gelen verileri ekle (üst seviye alanları override etmesin)
+  if (aiAnalysis.extractedFields) {
+    for (const [key, value] of Object.entries(aiAnalysis.extractedFields)) {
+      if (!canonical[key]) {
+        canonical[key] = typeof value === 'object' && value !== null && (value.name || value.age || value.profession)
+          ? formatPersonInfo(value)
+          : value;
+      }
+    }
+  }
+  
+  return canonical;
+}
+
+// Kişi bilgilerini formatla
+function formatPersonInfo(person: any): string {
+  if (typeof person === 'string') return person;
+  if (!person || typeof person !== 'object') return '';
+  
+  let result = '';
+  if (person.name) result += person.name;
+  
+  const details = [];
+  if (person.age) details.push(`${person.age} yaşında`);
+  if (person.profession) details.push(person.profession);
+  
+  if (details.length > 0) {
+    result += ` (${details.join(', ')})`;
+  }
+  
+  return result || '';
+}
+
 export async function analyzePoliceReport(text: string): Promise<AIAnalysisResult> {
   try {
     const response = await openai.chat.completions.create({
@@ -232,15 +283,16 @@ export async function generateJudicialDocument(
       return response.choices[0].message.content || "";
     }
     
-    // Form verilerini ve AI analizini birleştir
-    const allData = { ...formData, ...aiAnalysis.extractedFields };
+    // Form verileri zaten birleştirilmiş geliyor (routes.ts'de mapAIToCanonical + formData)
+    const allData = formData;
     
-    // Her bir veri için placeholder'ları değiştir
+    // İki aşamalı placeholder değiştirme
+    // 1. Aşama: Tüm {{key}} placeholder'ları değiştir
     for (const [key, value] of Object.entries(allData)) {
       documentContent = replacePlaceholder(documentContent, key, value);
     }
     
-    // Kalan tüm placeholder'ları temizle
+    // 2. Aşama: Kalan boş placeholder'ları ve koşullu blokları temizle
     documentContent = documentContent.replace(/{{[^}]+}}/g, "");
     documentContent = documentContent.replace(/{{#if [^}]+}}[\s\S]*?{{\/if}}/g, "");
     
