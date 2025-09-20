@@ -37,8 +37,18 @@ export const informationNotes = pgTable("information_notes", {
   createdAt: timestamp("created_at").default(sql`now()`).notNull(),
 });
 
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedBy: varchar("updated_by").notNull().references(() => users.id),
+  updatedAt: timestamp("updated_at").default(sql`now()`).notNull(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   informationNotes: many(informationNotes),
+  systemSettings: many(systemSettings),
 }));
 
 export const templatesRelations = relations(templates, ({ many }) => ({
@@ -53,6 +63,13 @@ export const informationNotesRelations = relations(informationNotes, ({ one }) =
   template: one(templates, {
     fields: [informationNotes.templateId],
     references: [templates.id],
+  }),
+}));
+
+export const systemSettingsRelations = relations(systemSettings, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [systemSettings.updatedBy],
+    references: [users.id],
   }),
 }));
 
@@ -72,9 +89,16 @@ export const insertInformationNoteSchema = createInsertSchema(informationNotes).
   createdAt: true,
 });
 
+export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Template = typeof templates.$inferSelect;
 export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
 export type InformationNote = typeof informationNotes.$inferSelect;
 export type InsertInformationNote = z.infer<typeof insertInformationNoteSchema>;
+export type SystemSetting = typeof systemSettings.$inferSelect;
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;

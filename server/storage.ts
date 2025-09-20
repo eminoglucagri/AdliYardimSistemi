@@ -1,4 +1,4 @@
-import { users, templates, informationNotes, type User, type InsertUser, type Template, type InsertTemplate, type InformationNote, type InsertInformationNote } from "@shared/schema";
+import { users, templates, informationNotes, systemSettings, type User, type InsertUser, type Template, type InsertTemplate, type InformationNote, type InsertInformationNote, type SystemSetting, type InsertSystemSetting } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ilike, sql } from "drizzle-orm";
 import session from "express-session";
@@ -25,6 +25,7 @@ export interface IStorage {
   // Information Note methods
   createInformationNote(note: InsertInformationNote): Promise<InformationNote>;
   getInformationNotesByUser(userId: string): Promise<InformationNote[]>;
+  getAllInformationNotes(): Promise<InformationNote[]>;
   searchInformationNotes(params: {
     registryNumber?: string;
     name?: string;
@@ -35,6 +36,14 @@ export interface IStorage {
     offset?: number;
   }): Promise<{ notes: InformationNote[]; total: number }>;
   getInformationNoteById(id: string): Promise<InformationNote | undefined>;
+  
+  // System Settings methods
+  getSystemSetting(key: string): Promise<SystemSetting | undefined>;
+  upsertSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting>;
+  getAllSystemSettings(): Promise<SystemSetting[]>;
+  
+  // Bulk operations
+  createUsersFromCSV(csvData: InsertUser[]): Promise<User[]>;
   
   sessionStore: session.Store;
 }
@@ -186,6 +195,78 @@ export class DatabaseStorage implements IStorage {
   async getInformationNoteById(id: string): Promise<InformationNote | undefined> {
     const [note] = await db.select().from(informationNotes).where(eq(informationNotes.id, id));
     return note || undefined;
+  }
+
+  async getAllInformationNotes(): Promise<InformationNote[]> {
+    const results = await db
+      .select({
+        note: informationNotes,
+        user: users,
+        template: templates,
+      })
+      .from(informationNotes)
+      .innerJoin(users, eq(informationNotes.userId, users.id))
+      .innerJoin(templates, eq(informationNotes.templateId, templates.id))
+      .orderBy(desc(informationNotes.createdAt));
+
+    return results.map(r => ({
+      ...r.note,
+      user: r.user,
+      template: r.template,
+    })) as any;
+  }
+
+  async getSystemSetting(key: string): Promise<SystemSetting | undefined> {
+    const [setting] = await db.select().from(systemSettings).where(eq(systemSettings.key, key));
+    return setting || undefined;
+  }
+
+  async upsertSystemSetting(insertSetting: InsertSystemSetting): Promise<SystemSetting> {
+    const existing = await this.getSystemSetting(insertSetting.key);
+    
+    if (existing) {
+      const [setting] = await db
+        .update(systemSettings)
+        .set({ 
+          value: insertSetting.value, 
+          description: insertSetting.description,
+          updatedBy: insertSetting.updatedBy,
+          updatedAt: sql`now()`
+        })
+        .where(eq(systemSettings.key, insertSetting.key))
+        .returning();
+      return setting;
+    } else {
+      const [setting] = await db
+        .insert(systemSettings)
+        .values(insertSetting)
+        .returning();
+      return setting;
+    }
+  }
+
+  async getAllSystemSettings(): Promise<SystemSetting[]> {
+    return await db.select().from(systemSettings).orderBy(systemSettings.key);
+  }
+
+  async createUsersFromCSV(csvData: InsertUser[]): Promise<User[]> {
+    const results: User[] = [];
+    
+    for (const userData of csvData) {
+      try {
+        // Check if user already exists
+        const existing = await this.getUserByRegistryNumber(userData.registryNumber);
+        if (!existing) {
+          const user = await this.createUser(userData);
+          results.push(user);
+        }
+      } catch (error) {
+        console.error(`Error creating user ${userData.registryNumber}:`, error);
+        // Continue with next user instead of failing all
+      }
+    }
+    
+    return results;
   }
 }
 

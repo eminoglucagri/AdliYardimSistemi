@@ -12,12 +12,13 @@ async function hashPassword(password: string) {
   return `${buf.toString("hex")}.${salt}`;
 }
 import { storage } from "./storage";
-import { analyzePoliceReport, generateJudicialDocument } from "./services/openai";
+import { analyzePoliceReport, generateJudicialDocument, resetOpenAIInstance } from "./services/openai";
 import { generateWordDocument, generatePDFFromHTML } from "./services/document-generator";
 import { seedTemplates } from "./seed-templates";
 import { createAdminUser } from "./create-admin";
 import multer from "multer";
 import { z } from "zod";
+import { readFileSync, unlinkSync } from "fs";
 
 const upload = multer({ dest: "uploads/" });
 
@@ -217,12 +218,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users/bulk-upload", requireAdmin, upload.single("file"), async (req, res, next) => {
+  app.post("/api/admin/users/bulk-upload", requireAdmin, upload.single("csvFile"), async (req, res, next) => {
     try {
-      // Handle CSV file upload and user creation
-      // This would parse the CSV and create users
-      res.json({ message: "Kullanıcılar başarıyla yüklendi" });
+      if (!req.file) {
+        return res.status(400).json({ message: "CSV dosyası gereklidir" });
+      }
+
+      const csvContent = readFileSync(req.file.path, "utf-8");
+      const lines = csvContent.split("\n").filter(line => line.trim());
+      
+      if (lines.length === 0) {
+        return res.status(400).json({ message: "CSV dosyası boş" });
+      }
+
+      const users = [];
+      const errors = [];
+
+      // Parse CSV lines (format: registryNumber,name,title,password)
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const [registryNumber, name, title, password] = line.split(",").map(field => field.trim());
+        
+        if (!registryNumber || !name || !title || !password) {
+          errors.push(`Satır ${i + 1}: Eksik bilgi (Sicil No, Ad Soyad, Ünvan, Şifre gerekli)`);
+          continue;
+        }
+
+        users.push({
+          registryNumber,
+          name,
+          title,
+          password: await hashPassword(password),
+          isAdmin: false,
+        });
+      }
+
+      if (errors.length > 0) {
+        return res.status(400).json({ message: "CSV format hatası", errors });
+      }
+
+      const createdUsers = await storage.createUsersFromCSV(users);
+      
+      // Clean up the uploaded file
+      try {
+        unlinkSync(req.file.path);
+      } catch (unlinkError) {
+        console.warn("Could not delete uploaded file:", unlinkError);
+      }
+      
+      res.json({ 
+        message: "Kullanıcılar başarıyla yüklendi", 
+        count: createdUsers.length,
+        users: createdUsers.map(u => ({ id: u.id, registryNumber: u.registryNumber, name: u.name }))
+      });
     } catch (error) {
+      // Clean up the uploaded file in case of error
+      if (req.file) {
+        try {
+          unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.warn("Could not delete uploaded file:", unlinkError);
+        }
+      }
       next(error);
     }
   });
@@ -241,6 +300,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.deleteUser(req.params.id);
       res.sendStatus(204);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Admin-only endpoints for viewing all user data
+  app.get("/api/admin/notes", requireAdmin, async (req, res, next) => {
+    try {
+      const allNotes = await storage.getAllInformationNotes();
+      res.json(allNotes);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // System settings management
+  app.get("/api/admin/settings", requireAdmin, async (req, res, next) => {
+    try {
+      const settings = await storage.getAllSystemSettings();
+      res.json(settings);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/settings", requireAdmin, async (req, res, next) => {
+    try {
+      const { key, value, description } = req.body;
+      
+      if (!key || !value) {
+        return res.status(400).json({ message: "Anahtar ve değer gereklidir" });
+      }
+
+      const setting = await storage.upsertSystemSetting({
+        key,
+        value,
+        description,
+        updatedBy: req.user!.id,
+      });
+
+      // Reset OpenAI instance when API key is updated
+      if (key === "openai_api_key") {
+        resetOpenAIInstance();
+        console.log("OpenAI instance reset due to API key update");
+      }
+      
+      res.json(setting);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/admin/settings/:key", requireAdmin, async (req, res, next) => {
+    try {
+      const setting = await storage.getSystemSetting(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ message: "Ayar bulunamadı" });
+      }
+      res.json(setting);
     } catch (error) {
       next(error);
     }

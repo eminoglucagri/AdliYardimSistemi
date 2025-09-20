@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, Users, FileText, Archive, Trash2 } from "lucide-react";
+import { Upload, Users, FileText, Archive, Trash2, Key, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPanel() {
@@ -24,6 +24,9 @@ export default function AdminPanel() {
     type: "",
     fields: {} as any,
   });
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [openAIKey, setOpenAIKey] = useState("");
+  const [showAllNotes, setShowAllNotes] = useState(false);
 
   // Get Users
   const { data: users } = useQuery({
@@ -33,6 +36,17 @@ export default function AdminPanel() {
   // Get Templates
   const { data: templates } = useQuery({
     queryKey: ["/api/templates"],
+  });
+
+  // Get All Information Notes (for admin view)
+  const { data: allNotes } = useQuery({
+    queryKey: ["/api/admin/notes"],
+    enabled: showAllNotes,
+  });
+
+  // Get System Settings
+  const { data: systemSettings } = useQuery({
+    queryKey: ["/api/admin/settings"],
   });
 
   // Update User Admin Status
@@ -120,6 +134,63 @@ export default function AdminPanel() {
     },
   });
 
+  // CSV Bulk User Upload
+  const csvUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("csvFile", file);
+      const response = await fetch("/api/admin/users/bulk-upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error("CSV yükleme başarısız");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setCsvFile(null);
+      toast({
+        title: "Başarılı",
+        description: `${data.count} kullanıcı başarıyla eklendi`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update OpenAI API Key
+  const updateApiKeyMutation = useMutation({
+    mutationFn: async (apiKey: string) => {
+      await apiRequest("POST", "/api/admin/settings", {
+        key: "openai_api_key",
+        value: apiKey,
+        description: "OpenAI API anahtarı",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      setOpenAIKey("");
+      toast({
+        title: "Başarılı",
+        description: "OpenAI API anahtarı güncellendi",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateTemplate = () => {
     if (!newTemplate.name || !newTemplate.type) {
       toast({
@@ -141,8 +212,161 @@ export default function AdminPanel() {
     });
   };
 
+  const handleCsvUpload = () => {
+    if (!csvFile) {
+      toast({
+        title: "Hata",
+        description: "CSV dosyası seçiniz",
+        variant: "destructive",
+      });
+      return;
+    }
+    csvUploadMutation.mutate(csvFile);
+  };
+
+  const handleApiKeyUpdate = () => {
+    if (!openAIKey.trim()) {
+      toast({
+        title: "Hata",
+        description: "API anahtarı boş olamaz",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateApiKeyMutation.mutate(openAIKey);
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Header with System Settings and User Notes Toggle */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* OpenAI API Key Management */}
+        <Card data-testid="card-api-key-management">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Key className="w-5 h-5" />
+              <span>OpenAI API Ayarları</span>
+            </CardTitle>
+            <CardDescription>
+              ChatGPT entegrasyonu için API anahtarını yönetin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="openaiKey">API Anahtarı</Label>
+              <Input
+                id="openaiKey"
+                type="password"
+                placeholder="sk-..."
+                value={openAIKey}
+                onChange={(e) => setOpenAIKey(e.target.value)}
+                data-testid="input-openai-key"
+              />
+            </div>
+            <Button
+              onClick={handleApiKeyUpdate}
+              disabled={updateApiKeyMutation.isPending}
+              className="w-full"
+              data-testid="button-update-api-key"
+            >
+              <Key className="w-4 h-4 mr-2" />
+              {updateApiKeyMutation.isPending ? "Güncelleniyor..." : "API Anahtarını Güncelle"}
+            </Button>
+            {(systemSettings as any[])?.find((s: any) => s.key === "openai_api_key") && (
+              <p className="text-xs text-muted-foreground">
+                Son güncelleme: {new Date((systemSettings as any[]).find((s: any) => s.key === "openai_api_key")?.updatedAt).toLocaleString("tr-TR")}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* View All User Notes */}
+        <Card data-testid="card-user-notes">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Eye className="w-5 h-5" />
+              <span>Kullanıcı Bilgi Notları</span>
+            </CardTitle>
+            <CardDescription>
+              Tüm kullanıcıların oluşturduğu bilgi notlarını görüntüleyin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => setShowAllNotes(!showAllNotes)}
+              variant={showAllNotes ? "secondary" : "outline"}
+              className="w-full"
+              data-testid="button-toggle-all-notes"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              {showAllNotes ? "Notları Gizle" : "Tüm Notları Göster"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* All User Notes Table */}
+      {showAllNotes && (
+        <div className="mb-6">
+          <Card data-testid="card-all-notes-table">
+            <CardHeader>
+              <CardTitle>Tüm Kullanıcı Bilgi Notları</CardTitle>
+              <CardDescription>
+                Sistemdeki tüm kullanıcıların oluşturduğu bilgi notları
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table data-testid="table-all-notes">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead>Kullanıcı</TableHead>
+                    <TableHead>Sicil No</TableHead>
+                    <TableHead>Konu</TableHead>
+                    <TableHead>Şablon</TableHead>
+                    <TableHead>İşlemler</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(allNotes as any[])?.map((note: any) => (
+                    <TableRow key={note.id} data-testid={`row-note-${note.id}`}>
+                      <TableCell>
+                        {new Date(note.createdAt).toLocaleDateString("tr-TR")}
+                      </TableCell>
+                      <TableCell>{note.user?.name}</TableCell>
+                      <TableCell>{note.user?.registryNumber}</TableCell>
+                      <TableCell className="max-w-xs truncate">{note.subject}</TableCell>
+                      <TableCell>{note.template?.name}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            // View note details - could open a modal or expand inline
+                            toast({
+                              title: "Bilgi Notu",
+                              description: "Detay görüntüleme yakında eklenecek",
+                            });
+                          }}
+                          data-testid={`button-view-note-${note.id}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {(!allNotes || (allNotes as any[]).length === 0) && (
+                <div className="text-center py-6 text-muted-foreground">
+                  Henüz bilgi notu bulunamadı
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Management */}
         <div className="lg:col-span-2">
@@ -169,10 +393,15 @@ export default function AdminPanel() {
                     accept=".csv"
                     className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                     data-testid="input-bulk-upload"
+                    onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
                   />
-                  <Button data-testid="button-bulk-upload">
+                  <Button 
+                    onClick={handleCsvUpload}
+                    disabled={!csvFile || csvUploadMutation.isPending}
+                    data-testid="button-bulk-upload"
+                  >
                     <Upload className="w-4 h-4 mr-2" />
-                    Yükle
+                    {csvUploadMutation.isPending ? "Yükleniyor..." : "Yükle"}
                   </Button>
                 </div>
               </div>

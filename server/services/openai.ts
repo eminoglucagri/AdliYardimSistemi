@@ -1,9 +1,42 @@
 import OpenAI from "openai";
+import { storage } from "../storage";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key"
-});
+let openaiInstance: OpenAI | null = null;
+
+async function getOpenAIInstance(): Promise<OpenAI> {
+  if (openaiInstance) {
+    return openaiInstance;
+  }
+
+  // Try to get API key from admin settings first
+  let apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR;
+  
+  try {
+    const setting = await storage.getSystemSetting("openai_api_key");
+    if (setting?.value) {
+      apiKey = setting.value;
+      console.log("Using OpenAI API key from admin settings");
+    }
+  } catch (error) {
+    console.warn("Could not fetch OpenAI API key from admin settings, using environment variable");
+  }
+
+  if (!apiKey) {
+    throw new Error("OpenAI API key not found in admin settings or environment variables");
+  }
+
+  openaiInstance = new OpenAI({
+    apiKey,
+  });
+
+  return openaiInstance;
+}
+
+// Reset the OpenAI instance to force re-initialization with new API key
+export function resetOpenAIInstance(): void {
+  openaiInstance = null;
+}
 
 export interface AIAnalysisResult {
   eventDate?: string;
@@ -69,6 +102,7 @@ function formatPersonInfo(person: any): string {
 
 export async function analyzePoliceReport(text: string): Promise<AIAnalysisResult> {
   try {
+    const openai = await getOpenAIInstance();
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini", // Daha hızlı model
       messages: [
@@ -262,6 +296,7 @@ export async function generateJudicialDocument(
     
     // Eğer şablon içeriği yoksa eski yöntemle oluştur
     if (!documentContent) {
+      const openai = await getOpenAIInstance();
       const response = await openai.chat.completions.create({
         model: "gpt-5",
         messages: [
