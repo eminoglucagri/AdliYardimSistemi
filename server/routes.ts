@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Form verilerini AI verilerine öncelik vererek birleştir
-      const { mapAIToCanonical } = await import("./services/openai.js");
+      const { mapAIToCanonical } = await import("./services/openai");
       const canonicalData = mapAIToCanonical(aiAnalysis);
       const finalData = { ...canonicalData, ...formData }; // Form verileri öncelikli
       
