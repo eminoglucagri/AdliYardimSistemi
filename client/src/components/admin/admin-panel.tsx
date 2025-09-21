@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Upload, Users, FileText, Archive, Trash2, Key, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import NoteDetailModal from "./note-detail-modal";
 
 export default function AdminPanel() {
   const { toast } = useToast();
@@ -27,6 +28,7 @@ export default function AdminPanel() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [openAIKey, setOpenAIKey] = useState("");
   const [showAllNotes, setShowAllNotes] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<any>(null);
 
   // Get Users
   const { data: users } = useQuery({
@@ -341,13 +343,7 @@ export default function AdminPanel() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            // View note details - could open a modal or expand inline
-                            toast({
-                              title: "Bilgi Notu",
-                              description: "Detay görüntüleme yakında eklenecek",
-                            });
-                          }}
+                          onClick={() => setSelectedNote(note)}
                           data-testid={`button-view-note-${note.id}`}
                         >
                           <Eye className="w-4 h-4" />
@@ -610,6 +606,13 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Note Detail Modal */}
+      <NoteDetailModal
+        note={selectedNote}
+        isOpen={!!selectedNote}
+        onClose={() => setSelectedNote(null)}
+      />
     </div>
   );
 }
