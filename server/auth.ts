@@ -110,7 +110,8 @@ export function setupAuth(app: Express) {
       
       req.login(user, (err) => {
         if (err) return next(err);
-        res.json(user);
+        const { password, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
       });
     })(req, res, next);
   });
