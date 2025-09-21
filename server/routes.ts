@@ -305,6 +305,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Şifre değiştirme endpoint'i
+  app.post("/api/user/change-password", requireAuth, async (req, res, next) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Mevcut şifre ve yeni şifre gereklidir" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Yeni şifre en az 6 karakter olmalıdır" });
+      }
+
+      // Mevcut kullanıcı bilgilerini al
+      const user = await storage.getUserById(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+      }
+
+      // Mevcut şifre kontrolü
+      const [storedHash, storedSalt] = user.password.split(".");
+      const currentHashBuffer = (await scryptAsync(currentPassword, storedSalt, 64)) as Buffer;
+      const currentHash = currentHashBuffer.toString("hex");
+      
+      if (currentHash !== storedHash) {
+        return res.status(400).json({ message: "Mevcut şifre hatalı" });
+      }
+
+      // Yeni şifre ile mevcut şifre aynı mı kontrolü
+      if (currentPassword === newPassword) {
+        return res.status(400).json({ message: "Yeni şifre mevcut şifreden farklı olmalıdır" });
+      }
+
+      // Yeni şifreyi hashle
+      const hashedNewPassword = await hashPassword(newPassword);
+      
+      // Şifreyi güncelle
+      await storage.updateUserPassword(req.user!.id, hashedNewPassword);
+
+      res.json({ message: "Şifre başarıyla değiştirildi" });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Admin-only endpoints for viewing all user data
   app.get("/api/admin/notes", requireAdmin, async (req, res, next) => {
     try {
