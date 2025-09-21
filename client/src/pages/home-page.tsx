@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, LogOut, Archive, Settings } from "lucide-react";
+import { FileText, LogOut, Archive, Settings, User } from "lucide-react";
 import WizardForm from "@/components/wizard/wizard-form";
 import ArchiveView from "@/components/archive/archive-view";
 import AdminPanel from "@/components/admin/admin-panel";
+import ProfilePanel from "@/components/profile/profile-panel";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -60,7 +61,7 @@ export default function HomePage() {
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
+            <TabsList className={`grid w-full ${user?.isAdmin ? 'grid-cols-4' : 'grid-cols-3'} lg:w-auto`}>
               <TabsTrigger 
                 value="wizard" 
                 className="flex items-center space-x-2"
@@ -76,6 +77,14 @@ export default function HomePage() {
               >
                 <Archive className="w-4 h-4" />
                 <span>Arşiv</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="profile" 
+                className="flex items-center space-x-2"
+                data-testid="tab-profile"
+              >
+                <User className="w-4 h-4" />
+                <span>Profil</span>
               </TabsTrigger>
               {user?.isAdmin && (
                 <TabsTrigger 
@@ -95,6 +104,10 @@ export default function HomePage() {
 
             <TabsContent value="archive" className="mt-6">
               <ArchiveView />
+            </TabsContent>
+
+            <TabsContent value="profile" className="mt-6">
+              <ProfilePanel />
             </TabsContent>
 
             {user?.isAdmin && (
