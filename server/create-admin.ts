@@ -16,7 +16,9 @@ export async function createAdminUser() {
     const existingAdmin = await storage.getUserByRegistryNumber("ADMIN001");
     if (existingAdmin) {
       console.log("Admin user already exists");
-      return { message: "Admin user already exists", user: existingAdmin };
+      // Remove sensitive data from response
+      const { password, ...userWithoutPassword } = existingAdmin;
+      return { message: "Admin user already exists", user: userWithoutPassword };
     }
 
     // Create admin user with properly hashed password
@@ -34,7 +36,9 @@ export async function createAdminUser() {
     console.log("Registry Number: ADMIN001");
     console.log("Password: admin123");
     
-    return { message: "Admin user created successfully", user: adminUser };
+    // Remove sensitive data from response
+    const { password, ...userWithoutPassword } = adminUser;
+    return { message: "Admin user created successfully", user: userWithoutPassword };
   } catch (error) {
     console.error("Error creating admin user:", error);
     throw error;
