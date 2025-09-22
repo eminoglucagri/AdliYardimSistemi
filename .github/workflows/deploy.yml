@@ -1,35 +1,63 @@
-script: |
-  set -e
-  APP_PATH=${{ secrets.EC2_PATH }}
-  if [ -z "$APP_PATH" ]; then APP_PATH=/var/www/bilginotu; fi
+name: Deploy to EC2 (/bilginotu)
 
-  # İlk kurulum / güncelleme
-  if [ ! -d "$APP_PATH/.git" ]; then
-    rm -rf "$APP_PATH"
-    mkdir -p "$APP_PATH"
-    git clone https://github.com/eminoglucagri/AdliYardimSistemi.git "$APP_PATH"
-  fi
-  cd "$APP_PATH"
-  git fetch --all
-  git checkout main
-  git pull origin main
+on:
+  push:
+    branches: ["main"]
 
-  # Node & PM2 (gerekirse)
-  command -v node || (curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs)
-  command -v pm2 || sudo npm i -g pm2
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-  npm ci || npm install
-  npm run build --if-present
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  # bootstrap.cjs yoksa oluştur (dotenv + ESM import)
-  if [ ! -f bootstrap.cjs ]; then
-    cat > bootstrap.cjs <<'EOF'
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e
+
+            APP_PATH=${{ secrets.EC2_PATH }}
+            if [ -z "$APP_PATH" ]; then APP_PATH=/var/www/bilginotu; fi
+
+            # İlk kurulum / güncelleme
+            if [ ! -d "$APP_PATH/.git" ]; then
+              sudo rm -rf "$APP_PATH"
+              mkdir -p "$APP_PATH"
+              git clone https://github.com/eminoglucagri/AdliYardimSistemi.git "$APP_PATH"
+            fi
+
+            cd "$APP_PATH"
+            git fetch --all
+            git checkout main
+            git pull origin main
+
+            # Node 22 ve PM2 (yüklü değilse yükle)
+            if ! command -v node >/dev/null 2>&1; then
+              curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+            if ! command -v pm2 >/dev/null 2>&1; then
+              sudo npm i -g pm2
+            fi
+
+            npm ci || npm install
+            npm run build --if-present
+
+            # bootstrap.cjs (dotenv + ESM import)
+            if [ ! -f bootstrap.cjs ]; then
+              cat > bootstrap.cjs <<'EOF'
 require('dotenv').config({ path: '/var/www/bilginotu/.env' });
 (async () => { await import('./dist/index.js'); })();
 EOF
-  fi
+            fi
 
-  # Çalıştır / güncelle
-  pm2 delete bilginotu || true
-  pm2 start "$APP_PATH/bootstrap.cjs" --name bilginotu --cwd "$APP_PATH"
-  pm2 save
+            pm2 delete bilginotu || true
+            pm2 start "$APP_PATH/bootstrap.cjs" --name bilginotu --cwd "$APP_PATH"
+            pm2 save
