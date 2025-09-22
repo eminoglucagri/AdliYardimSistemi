@@ -347,6 +347,20 @@ export default function WizardForm() {
                       {typeof aiAnalysis.suspect === 'object' ? 
                         (() => {
                           const s = aiAnalysis.suspect as any;
+                          
+                          // Array ise çoklu kişi formatla
+                          if (Array.isArray(s)) {
+                            return s.map((person: any) => {
+                              let result = person.name || 'Bilinmiyor';
+                              const details = [];
+                              if (person.age) details.push(`${person.age} yaşında`);
+                              if (person.profession) details.push(person.profession);
+                              if (details.length > 0) result += ` (${details.join(', ')})`;
+                              return result;
+                            }).join(', ');
+                          }
+                          
+                          // Tek obje ise normal formatla
                           let result = s.name || 'Bilinmiyor';
                           const details = [];
                           if (s.age) details.push(`${s.age} yaşında`);
@@ -362,6 +376,20 @@ export default function WizardForm() {
                       {typeof aiAnalysis.victim === 'object' ? 
                         (() => {
                           const v = aiAnalysis.victim as any;
+                          
+                          // Array ise çoklu kişi formatla
+                          if (Array.isArray(v)) {
+                            return v.map((person: any) => {
+                              let result = person.name || 'Bilinmiyor';
+                              const details = [];
+                              if (person.age) details.push(`${person.age} yaşında`);
+                              if (person.profession) details.push(person.profession);
+                              if (details.length > 0) result += ` (${details.join(', ')})`;
+                              return result;
+                            }).join(', ');
+                          }
+                          
+                          // Tek obje ise normal formatla
                           let result = v.name || 'Bilinmiyor';
                           const details = [];
                           if (v.age) details.push(`${v.age} yaşında`);
