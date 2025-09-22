@@ -2,7 +2,8 @@ name: Deploy to EC2 (/bilginotu)
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -12,18 +13,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH
+      - name: SSH deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script_stop: true
           script: |
             set -e
 
-            APP_PATH=${{ secrets.EC2_PATH }}
+            APP_PATH="${{ secrets.EC2_PATH }}"
             if [ -z "$APP_PATH" ]; then APP_PATH=/var/www/bilginotu; fi
 
             # İlk kurulum / güncelleme
@@ -38,7 +37,7 @@ jobs:
             git checkout main
             git pull origin main
 
-            # Node 22 ve PM2 (yüklü değilse yükle)
+            # Node 22 ve PM2 (gerekirse kur)
             if ! command -v node >/dev/null 2>&1; then
               curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
               sudo apt-get install -y nodejs
@@ -50,12 +49,9 @@ jobs:
             npm ci || npm install
             npm run build --if-present
 
-            # bootstrap.cjs (dotenv + ESM import)
+            # bootstrap.cjs (dotenv + ESM import) — heredoc yerine printf ile yaz
             if [ ! -f bootstrap.cjs ]; then
-              cat > bootstrap.cjs <<'EOF'
-require('dotenv').config({ path: '/var/www/bilginotu/.env' });
-(async () => { await import('./dist/index.js'); })();
-EOF
+              printf "require('dotenv').config({ path: '/var/www/bilginotu/.env' });\n(async () => { await import('./dist/index.js'); })();\n" > bootstrap.cjs
             fi
 
             pm2 delete bilginotu || true
