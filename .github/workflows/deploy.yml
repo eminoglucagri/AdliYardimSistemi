@@ -1,55 +1,35 @@
-name: Deploy to EC2 (/bilginotu)
+script: |
+  set -e
+  APP_PATH=${{ secrets.EC2_PATH }}
+  if [ -z "$APP_PATH" ]; then APP_PATH=/var/www/bilginotu; fi
 
-on:
-  push:
-    branches: [ "main" ]
+  # İlk kurulum / güncelleme
+  if [ ! -d "$APP_PATH/.git" ]; then
+    rm -rf "$APP_PATH"
+    mkdir -p "$APP_PATH"
+    git clone https://github.com/eminoglucagri/AdliYardimSistemi.git "$APP_PATH"
+  fi
+  cd "$APP_PATH"
+  git fetch --all
+  git checkout main
+  git pull origin main
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  # Node & PM2 (gerekirse)
+  command -v node || (curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs)
+  command -v pm2 || sudo npm i -g pm2
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  npm ci || npm install
+  npm run build --if-present
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
-            APP_PATH=${{ secrets.EC2_PATH }}
-            if [ -z "$APP_PATH" ]; then
-              APP_PATH=/var/www/bilginotu
-            fi
+  # bootstrap.cjs yoksa oluştur (dotenv + ESM import)
+  if [ ! -f bootstrap.cjs ]; then
+    cat > bootstrap.cjs <<'EOF'
+require('dotenv').config({ path: '/var/www/bilginotu/.env' });
+(async () => { await import('./dist/index.js'); })();
+EOF
+  fi
 
-            # İlk kurulum
-            if [ ! -d "$APP_PATH/.git" ]; then
-              rm -rf "$APP_PATH"
-              mkdir -p "$APP_PATH"
-              git clone https://github.com/eminoglucagri/AdliYardimSistemi.git "$APP_PATH"
-            fi
-
-            cd "$APP_PATH"
-            git fetch --all
-            git checkout main
-            git pull origin main
-
-            # .env zorunlu
-            if [ ! -f ".env" ]; then
-              echo "HATA: .env yok: $APP_PATH/.env"
-              exit 1
-            fi
-
-            # Node & PM2 (gerekirse)
-            command -v node || (curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt install -y nodejs)
-            command -v pm2 || sudo npm i -g pm2
-
-            npm ci || npm install
-            npm run build --if-present
-
-            # Uygulamayı 3000 portunda çalıştır / güncelle
-            pm2 start npm --name "bilginotu" -- run start || pm2 restart "bilginotu"
-            pm2 save
+  # Çalıştır / güncelle
+  pm2 delete bilginotu || true
+  pm2 start "$APP_PATH/bootstrap.cjs" --name bilginotu --cwd "$APP_PATH"
+  pm2 save
