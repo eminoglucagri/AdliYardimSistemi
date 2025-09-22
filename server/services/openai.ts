@@ -81,8 +81,25 @@ export function mapAIToCanonical(aiAnalysis: AIAnalysisResult): Record<string, a
   return canonical;
 }
 
-// Kişi bilgilerini formatla
+// Kişi bilgilerini formatla (array desteği ile)
 function formatPersonInfo(person: any): string {
+  if (typeof person === 'string') return person;
+  if (!person) return '';
+  
+  // Array ise tüm kişileri formatla
+  if (Array.isArray(person)) {
+    return person
+      .map(p => formatSinglePersonInfo(p))
+      .filter(p => p.length > 0)
+      .join(', ');
+  }
+  
+  // Tek kişi ise direkt formatla
+  return formatSinglePersonInfo(person);
+}
+
+// Tek kişi bilgisini formatla
+function formatSinglePersonInfo(person: any): string {
   if (typeof person === 'string') return person;
   if (!person || typeof person !== 'object') return '';
   
@@ -156,8 +173,11 @@ export async function analyzePoliceReport(text: string): Promise<AIAnalysisResul
     // Temel alanları direkt aktar
     if (result.eventDate) extractedFields.eventDate = result.eventDate;
     if (result.eventDateTime) extractedFields.eventDateTime = result.eventDateTime;
-    if (result.suspect) extractedFields.suspectInfo = result.suspect;
-    if (result.victim) extractedFields.victimInfo = result.victim;
+    
+    // Kişi bilgilerini formatla (array desteği ile)
+    if (result.suspect) extractedFields.suspectInfo = formatPersonInfo(result.suspect);
+    if (result.victim) extractedFields.victimInfo = formatPersonInfo(result.victim);
+    
     if (result.crimeType) extractedFields.crimeType = result.crimeType;
     if (result.location) extractedFields.eventLocation = result.location;
     if (result.summary) extractedFields.eventSummary = result.summary;
