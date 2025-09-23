@@ -1,59 +1,52 @@
-name: Deploy to EC2 (/bilginotu)
+- name: Deploy via SSH
+  uses: appleboy/ssh-action@v1.0.3
+  with:
+    host: ${{ secrets.EC2_HOST }}
+    username: ${{ secrets.EC2_USER }}
+    key: ${{ secrets.EC2_SSH_KEY }}
+    port: 22
+    script_stop: true
+    timeout: 1m            # SSH bağlantı süresi
+    command_timeout: 40m   # KOMUT süresi (npm ci/build uzun sürebilir)
+    debug: true            # Logları zenginleştir
+    script: |
+      set -euo pipefail
 
-on:
-  push:
-    branches:
-      - main
+      APP_PATH="${{ secrets.EC2_PATH }}"
+      if [ -z "${APP_PATH:-}" ]; then APP_PATH="/var/www/bilginotu"; fi
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+      # İlk kurulum / güncelleme
+      if [ ! -d "$APP_PATH/.git" ]; then
+        sudo rm -rf "$APP_PATH"
+        mkdir -p "$APP_PATH"
+        git clone https://github.com/eminoglucagri/AdliYardimSistemi.git "$APP_PATH"
+      fi
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      cd "$APP_PATH"
+      git fetch --all
+      git checkout main
+      git pull --ff-only origin main
 
-      - name: SSH deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
+      # Node ve PM2 (yüklü değilse)
+      if ! command -v node >/dev/null 2>&1; then
+        curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+      fi
+      if ! command -v pm2 >/dev/null 2>&1; then
+        sudo npm i -g pm2
+      fi
 
-            APP_PATH="${{ secrets.EC2_PATH }}"
-            if [ -z "$APP_PATH" ]; then APP_PATH=/var/www/bilginotu; fi
+      # Daha hızlı ve deterministik kurulum
+      export CI=true
+      npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      npm run build --if-present
 
-            # İlk kurulum / güncelleme
-            if [ ! -d "$APP_PATH/.git" ]; then
-              sudo rm -rf "$APP_PATH"
-              mkdir -p "$APP_PATH"
-              git clone https://github.com/eminoglucagri/AdliYardimSistemi.git "$APP_PATH"
-            fi
+      # bootstrap.cjs her zaman DOĞRU .env yolunu kullansın
+      printf "require('dotenv').config({ path: '%s/.env' });\n(async () => { await import('./dist/index.js'); })();\n" "$APP_PATH" > bootstrap.cjs
 
-            cd "$APP_PATH"
-            git fetch --all
-            git checkout main
-            git pull origin main
+      # Çalıştır / güncelle
+      pm2 describe bilginotu >/dev/null 2>&1 && pm2 restart bilginotu --update-env || pm2 start "$APP_PATH/bootstrap.cjs" --name bilginotu --cwd "$APP_PATH"
+      pm2 save
 
-            # Node 22 ve PM2 (gerekirse kur)
-            if ! command -v node >/dev/null 2>&1; then
-              curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-            fi
-            if ! command -v pm2 >/dev/null 2>&1; then
-              sudo npm i -g pm2
-            fi
-
-            npm ci || npm install
-            npm run build --if-present
-
-            # bootstrap.cjs (dotenv + ESM import) — heredoc yerine printf ile yaz
-            if [ ! -f bootstrap.cjs ]; then
-              printf "require('dotenv').config({ path: '/var/www/bilginotu/.env' });\n(async () => { await import('./dist/index.js'); })();\n" > bootstrap.cjs
-            fi
-
-            pm2 delete bilginotu || true
-            pm2 start "$APP_PATH/bootstrap.cjs" --name bilginotu --cwd "$APP_PATH"
-            pm2 save
+      # Nginx kontrol
+      sudo nginx -t && sudo systemctl reload nginx
